@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+.font-serif-display {
+  font-family: 'Cormorant Garamond', 'Playfair Display', serif;
+}
+
+.font-script {
+  font-family: 'Great Vibes', 'Alex Brush', cursive;
+}
+
+.font-heading {
+  font-family: 'Playfair Display', 'Cormorant Garamond', serif;
+}
+
+.font-sans-body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Luxury card texture and subtle gold foil effects */
+.bg-cream-paper {
+  background-color: #FDFBF7;
+  background-image: radial-gradient(#E8DFD8 0.75px, transparent 0.75px);
+  background-size: 16px 16px;
+}
+
+.gold-foil-border {
+  border-image: linear-gradient(to bottom right, #DFC186, #F9F1D0, #C5A059, #F3E5AB, #B88E43) 1;
+}
+
+.gold-text-gradient {
+  background: linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #996515 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.rose-gold-gradient {
+  background: linear-gradient(135deg, #D4A373 0%, #E8B4B8 50%, #C38D9E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Animations */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+
+@keyframes float-petal {
+  0% {
+    transform: translateY(-20px) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  85% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(105vh) translateX(60px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.petal-floating {
+  position: fixed;
+  top: -10%;
+  pointer-events: none;
+  z-index: 30;
+  animation: float-petal linear infinite;
+}
+
+/* Custom delicate scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F5EFE6;
+}
+::-webkit-scrollbar-thumb {
+  background: #D9C8B4;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #BFA892;
+}

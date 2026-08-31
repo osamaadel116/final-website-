@@ -1,0 +1,339 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { weddingConfig as initialWeddingConfig } from './weddingConfig';
+import { WeddingConfig, GuestWish, RsvpData } from './types';
+import { OpeningEnvelopeModal } from './components/OpeningEnvelopeModal';
+import { MusicPlayer } from './components/MusicPlayer';
+import { HeroSection } from './components/HeroSection';
+import { CoupleSection } from './components/CoupleSection';
+import { EventsSchedule } from './components/EventsSchedule';
+import { RsvpSection } from './components/RsvpSection';
+import { GuestbookSection } from './components/GuestbookSection';
+import { FooterSection } from './components/FooterSection';
+import { LiveConfigEditorModal } from './components/LiveConfigEditorModal';
+import { FallingPetals } from './components/WatercolorFlorals';
+import { SlidersHorizontal } from 'lucide-react';
+
+const INITIAL_WISHES: GuestWish[] = [];
+
+const SECTIONS_ORDER = [
+  { id: 'hero', label: 'Cover' },
+  { id: 'couple', label: 'Couple' },
+  { id: 'events', label: 'Events' },
+  { id: 'rsvp', label: 'RSVP' },
+  { id: 'wishes', label: 'Guestbook' },
+];
+
+export default function App() {
+  // Configuration state with safe fallback
+  const [config, setConfig] = useState<WeddingConfig>(() => {
+    const saved = localStorage.getItem('wedding_custom_config');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          ...initialWeddingConfig,
+          ...parsed,
+          couple: {
+            ...initialWeddingConfig.couple,
+            ...(parsed.couple || {}),
+            groom: {
+              ...initialWeddingConfig.couple.groom,
+              ...(parsed.couple?.groom || {}),
+              photoUrl:
+                parsed.couple?.groom?.photoUrl &&
+                !parsed.couple.groom.photoUrl.includes('photo-1507003211169') &&
+                !parsed.couple.groom.photoUrl.includes('photo-1506794778202')
+                  ? parsed.couple.groom.photoUrl
+                  : initialWeddingConfig.couple.groom.photoUrl,
+            },
+            bride: { ...initialWeddingConfig.couple.bride, ...(parsed.couple?.bride || {}) },
+            quote: { ...initialWeddingConfig.couple.quote, ...(parsed.couple?.quote || {}) },
+          },
+          weddingDate: {
+            ...initialWeddingConfig.weddingDate,
+            ...(parsed.weddingDate || {}),
+          },
+          events: Array.isArray(parsed.events) && parsed.events.length > 0 ? parsed.events : initialWeddingConfig.events,
+          themes: Array.isArray(parsed.themes) && parsed.themes.length > 0 ? parsed.themes : initialWeddingConfig.themes,
+          gallery: Array.isArray(parsed.gallery) && parsed.gallery.length > 0
+            ? parsed.gallery.map((g: any, i: number) =>
+                i === 0 && (g.url?.includes('photo-1519741497674') || g.url?.includes('hero.jpg'))
+                  ? { ...g, url: initialWeddingConfig.gallery[0]?.url }
+                  : g
+              )
+            : initialWeddingConfig.gallery,
+          musicTracks: Array.isArray(parsed.musicTracks) && parsed.musicTracks.length > 0 ? parsed.musicTracks : initialWeddingConfig.musicTracks,
+          timeline: Array.isArray(parsed.timeline) && parsed.timeline.length > 0 ? parsed.timeline : initialWeddingConfig.timeline,
+          giftAccounts: Array.isArray(parsed.giftAccounts) && parsed.giftAccounts.length > 0 ? parsed.giftAccounts : initialWeddingConfig.giftAccounts,
+          giftRegistries: Array.isArray(parsed.giftRegistries) && parsed.giftRegistries.length > 0 ? parsed.giftRegistries : initialWeddingConfig.giftRegistries,
+          dressCode: {
+            ...initialWeddingConfig.dressCode,
+            ...(parsed.dressCode || {}),
+            colorPalette: Array.isArray(parsed.dressCode?.colorPalette) ? parsed.dressCode.colorPalette : initialWeddingConfig.dressCode.colorPalette,
+            guidelines: Array.isArray(parsed.dressCode?.guidelines) ? parsed.dressCode.guidelines : initialWeddingConfig.dressCode.guidelines,
+          },
+          rsvpConfig: {
+            ...initialWeddingConfig.rsvpConfig,
+            ...(parsed.rsvpConfig || {}),
+            dietaryOptions: Array.isArray(parsed.rsvpConfig?.dietaryOptions) ? parsed.rsvpConfig.dietaryOptions : initialWeddingConfig.rsvpConfig.dietaryOptions,
+          },
+        };
+      } catch {
+        return initialWeddingConfig;
+      }
+    }
+    return initialWeddingConfig;
+  });
+
+  // Guest name extracted from URL query ?to=Name
+  const [guestName, setGuestName] = useState('Distinguished Guest');
+
+  // Invitation open gate state
+  const [isInvitationOpen, setIsInvitationOpen] = useState(false);
+
+  // Audio player state
+  const [isPlayingMusic, setIsPlayingMusic] = useState(false);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(config.defaultTrackIndex || 0);
+
+  // Active section for navigation and story progress tracking
+  const [activeSection, setActiveSection] = useState('hero');
+
+  // Canva Video-Style Auto-Play Mode
+
+
+  // Interactive Guestbook wishes & RSVPs
+  const [wishes, setWishes] = useState<GuestWish[]>(() => {
+    const saved = localStorage.getItem('wedding_guest_wishes_v2');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return INITIAL_WISHES;
+      }
+    }
+    return INITIAL_WISHES;
+  });
+
+  // Modal customizer state
+  const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
+  const [isMobilePreview, setIsMobilePreview] = useState(false);
+  const [showFallingPetals, setShowFallingPetals] = useState(true);
+
+  // Parse URL query parameter for personalized greeting
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const toParam = params.get('to') || params.get('guest') || params.get('name');
+      if (toParam) {
+        setGuestName(decodeURIComponent(toParam));
+      }
+    }
+  }, []);
+
+  // Save wishes to localStorage
+  useEffect(() => {
+    localStorage.setItem('wedding_guest_wishes_v2', JSON.stringify(wishes));
+  }, [wishes]);
+
+  // Track active section via IntersectionObserver for Canva story progress bar
+  useEffect(() => {
+    if (!isInvitationOpen) return;
+
+    const observerCallback: IntersectionObserverCallback = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -60% 0px',
+      threshold: 0.1,
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    SECTIONS_ORDER.forEach((sec) => {
+      const el = document.getElementById(sec.id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [isInvitationOpen, config]);
+
+  // Save config changes
+  const handleUpdateConfig = (newConfig: WeddingConfig) => {
+    setConfig(newConfig);
+    localStorage.setItem('wedding_custom_config', JSON.stringify(newConfig));
+  };
+
+  const handleResetToDefaults = () => {
+    setConfig(initialWeddingConfig);
+    localStorage.removeItem('wedding_custom_config');
+    setCurrentTrackIndex(initialWeddingConfig.defaultTrackIndex || 0);
+  };
+
+  // Trigger when user opens the invitation envelope
+  const handleOpenInvitation = () => {
+    setIsInvitationOpen(true);
+    setIsPlayingMusic(true);
+  };
+
+  const handleAddWish = (newWishData: Omit<GuestWish, 'id' | 'timestamp' | 'likesCount'>) => {
+    const newWish: GuestWish = {
+      ...newWishData,
+      id: `wish-${Date.now()}`,
+      timestamp: 'Just now',
+      likesCount: 1,
+    };
+    setWishes((prev) => [newWish, ...prev]);
+  };
+
+  const handleLikeWish = (wishId: string) => {
+    setWishes((prev) =>
+      prev.map((w) => (w.id === wishId ? { ...w, likesCount: w.likesCount + 1 } : w))
+    );
+  };
+
+  const handleRsvpSubmit = (data: RsvpData) => {
+    const existingRsvps = JSON.parse(localStorage.getItem('wedding_rsvps') || '[]');
+    localStorage.setItem('wedding_rsvps', JSON.stringify([...existingRsvps, { ...data, timestamp: new Date().toISOString() }]));
+
+    if (data.message && data.message.trim()) {
+      handleAddWish({
+        senderName: data.guestName,
+        relationship: 'RSVP Guest',
+        message: data.message,
+        attendance: data.attendance,
+      });
+    }
+  };
+
+  const handleNavigate = (sectionId: string) => {
+    setActiveSection(sectionId);
+    const elem = document.getElementById(sectionId);
+    if (elem) {
+      elem.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Find active theme colors
+  const activeTheme = config.themes.find((t) => t.id === config.activeThemeId) || config.themes[0];
+
+  return (
+    <div
+      className="min-h-screen relative font-sans-body transition-colors duration-500 overflow-x-hidden"
+      style={{ backgroundColor: activeTheme.paperBg }}
+    >
+      {/* Falling Watercolor Petals */}
+      {showFallingPetals && <FallingPetals tone={activeTheme.floralTone} />}
+
+      {/* Opening Envelope Gate Modal (TikTok / Luxury 3D Envelope Opening) */}
+      <OpeningEnvelopeModal
+        config={config}
+        guestName={guestName}
+        isOpen={!isInvitationOpen}
+        onOpenInvitation={handleOpenInvitation}
+      />
+
+      {/* Background Floating Music Player */}
+      <MusicPlayer
+        tracks={config.musicTracks}
+        currentTrackIndex={currentTrackIndex}
+        isPlaying={isPlayingMusic}
+        onTrackChange={(idx) => setCurrentTrackIndex(idx)}
+        onTogglePlay={(playing) => setIsPlayingMusic(playing)}
+        accentColor={activeTheme.primaryColor}
+      />
+
+      {/* Top Quick Bar for Auto Video Mode & Customizer */}
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
+        className="fixed top-5 right-4 z-40 flex items-center gap-2"
+      >
+        {/* Live Edit Details Button */}
+        <button
+          onClick={() => setIsCustomizerOpen(true)}
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#2C2420]/90 backdrop-blur-md border border-[#DFC186] text-[#F3E5AB] text-xs font-semibold shadow-md hover:bg-[#3D2B24] transition-all cursor-pointer"
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5 text-[#DFC186]" />
+          <span>Edit</span>
+        </button>
+      </motion.div>
+
+      {/* Main Content Layout with optional Smartphone Bezel for PC testing */}
+      <main
+        className={`mx-auto transition-all duration-300 ${
+          isMobilePreview
+            ? 'max-w-sm sm:max-w-md my-8 rounded-[40px] shadow-2xl border-8 border-[#2E2420] overflow-hidden bg-[#FAF7F2] relative'
+            : 'w-full max-w-5xl px-0 sm:px-4'
+        }`}
+      >
+        {/* If in Mobile Preview Mode, show phone top notch */}
+        {isMobilePreview && (
+          <div className="sticky top-0 z-30 bg-[#2E2420] text-white py-1 px-6 flex items-center justify-between text-[10px]">
+            <span>9:41</span>
+            <div className="w-20 h-3.5 bg-black rounded-full" />
+            <span>5G 100%</span>
+          </div>
+        )}
+
+        {/* 1. Hero Cover & Countdown Scene */}
+        <HeroSection config={config} onScrollToNext={() => handleNavigate('couple')} />
+
+        {/* 2. The Beloved Couple Scene (Groom & Bride) */}
+        <CoupleSection couple={config.couple} theme={activeTheme} />
+
+        {/* 3. Event Schedules & Venues Scene */}
+        <EventsSchedule events={config.events} theme={activeTheme} />
+
+        {/* 4. Interactive RSVP Scene */}
+        <RsvpSection
+          config={config}
+          defaultGuestName={guestName !== 'Distinguished Guest' ? guestName : ''}
+          onRsvpSubmit={handleRsvpSubmit}
+          theme={activeTheme}
+        />
+
+        {/* 5. Wedding Guestbook & Warmest Wishes Scene */}
+        <GuestbookSection
+          wishes={wishes}
+          onAddWish={handleAddWish}
+          onLikeWish={handleLikeWish}
+          theme={activeTheme}
+        />
+
+        {/* 6. Footer Scene */}
+        <FooterSection config={config} />
+      </main>
+
+      {/* Live Customizer Slide-over Panel */}
+      <LiveConfigEditorModal
+        isOpen={isCustomizerOpen}
+        onClose={() => setIsCustomizerOpen(false)}
+        config={config}
+        onUpdateConfig={handleUpdateConfig}
+        onResetToDefaults={handleResetToDefaults}
+        onReopenInvitation={() => {
+          setIsInvitationOpen(false);
+          setIsCustomizerOpen(false);
+        }}
+        isMobilePreview={isMobilePreview}
+        onToggleMobilePreview={() => setIsMobilePreview(!isMobilePreview)}
+        showFallingPetals={showFallingPetals}
+        onToggleFallingPetals={() => setShowFallingPetals(!showFallingPetals)}
+      />
+    </div>
+  );
+}
+
