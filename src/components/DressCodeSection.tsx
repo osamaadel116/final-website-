@@ -22,6 +22,9 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({ dressCode, t
           <h2 className="font-serif-display text-3xl sm:text-4xl font-bold text-[#2E2420] mt-1">
             Dress Code & Palette
           </h2>
+          <h3 dir="rtl" className="font-serif-display text-2xl sm:text-3xl font-bold text-[#2E2420] mt-1 mb-2" style={{ fontFamily: "'Amiri', 'Traditional Arabic', serif" }}>
+            قواعد اللباس والألوان
+          </h3>
           <BotanicalRoseHeaderOrnament theme={theme} className="my-2" />
           <p className="font-sans-body text-xs sm:text-sm text-[#5D6F7C] max-w-md mx-auto">
             {dressCode.description}

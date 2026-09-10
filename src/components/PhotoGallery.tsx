@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Maximize2, X, ChevronLeft, ChevronRight, Image as ImageIcon, Sparkles, Heart } from 'lucide-react';
 import { GalleryPhoto, FloralTheme } from '../types';
 import { WatercolorDivider, WatercolorCorner } from './WatercolorFlorals';
-import { BotanicalRoseHeaderOrnament, BotanicalRoseFrameCorner } from './BotanicalRoseDecorations';
+import { BotanicalRoseHeaderOrnament, BotanicalRoseFrameCorner, OrnateMiniRoseCorner } from './BotanicalRoseDecorations';
 
 interface PhotoGalleryProps {
   photos: GalleryPhoto[];
@@ -52,6 +52,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, theme }) => 
           <h2 className="font-serif-display text-3xl sm:text-4xl font-bold text-[#2E2420] mt-1">
             Our Gallery & Memories
           </h2>
+          <h3 dir="rtl" className="font-serif-display text-2xl sm:text-3xl font-bold text-[#2E2420] mt-1 mb-2" style={{ fontFamily: "'Amiri', 'Traditional Arabic', serif" }}>
+            معرض الصور والذكريات
+          </h3>
           <BotanicalRoseHeaderOrnament theme={theme} className="my-2" />
           <p className="font-sans-body text-xs sm:text-sm text-[#5D6F7C] max-w-md mx-auto italic">
             "A photograph is the pause button of life, capturing fleeting moments of love forever."
@@ -68,38 +71,38 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, theme }) => 
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.65, delay: (idx % 6) * 0.1, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => handleOpenLightbox(idx)}
-              className={`relative overflow-hidden rounded-2xl group cursor-pointer border-2 border-white shadow-md hover:shadow-xl bg-gradient-to-b from-[#DFC186]/30 via-white to-[#B69A5E]/20 p-2 sm:p-2.5 transition-all duration-300 ring-1 ring-[#DFC186]/60 hover:ring-[#DFC186] ${
+              className={`relative bg-white p-2 sm:p-2.5 rounded-sm shadow-[0_8px_20px_rgba(140,109,59,0.1)] hover:shadow-[0_15px_30px_rgba(140,109,59,0.15)] ring-1 ring-[#DFC186]/20 transition-all duration-500 group cursor-pointer hover:-translate-y-1 z-10 hover:z-20 ${
                 photo.featured ? 'col-span-2 row-span-2 aspect-4/3' : 'aspect-square'
               }`}
             >
               {/* Inner Picture Matting and Canvas */}
-              <div className="w-full h-full relative overflow-hidden rounded-xl bg-[#F0F5F8] border border-[#DFC186]/50">
+              <div className="w-full h-full relative overflow-hidden rounded-sm bg-[#FAF7F2]">
                 <img
                   src={photo.url}
                   alt={photo.caption || `Wedding Photo ${idx + 1}`}
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                 />
 
-                {/* Decorative Miniature Filigree Corner Accents */}
-                <div className="absolute top-1.5 left-1.5 w-4 h-4 border-t-2 border-l-2 border-[#DFC186]/90 rounded-tl-sm pointer-events-none" />
-                <div className="absolute top-1.5 right-1.5 w-4 h-4 border-t-2 border-r-2 border-[#DFC186]/90 rounded-tr-sm pointer-events-none" />
-                <div className="absolute bottom-1.5 left-1.5 w-4 h-4 border-b-2 border-l-2 border-[#DFC186]/90 rounded-bl-sm pointer-events-none" />
-                <div className="absolute bottom-1.5 right-1.5 w-4 h-4 border-b-2 border-r-2 border-[#DFC186]/90 rounded-br-sm pointer-events-none" />
+                {/* Subtle Inner Gilded Edge Trim */}
+                <div className="absolute inset-1 sm:inset-1.5 border border-[#DFC186]/40 pointer-events-none mix-blend-overlay" />
+                
+                {/* Inner Shadow for Matting effect */}
+                <div className="absolute inset-0 shadow-[inset_0_0_12px_rgba(0,0,0,0.06)] pointer-events-none" />
 
                 {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-[#2C3E50]/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-4 text-white">
+                <div className="absolute inset-0 bg-[#2C3E50]/55 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-4 text-white">
                   <div className="flex justify-between items-center">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-xs text-[10px] uppercase tracking-wider text-[#DFC186]">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-xs text-[10px] uppercase tracking-wider text-[#DFC186] border border-[#DFC186]/50">
                       <Sparkles className="w-3 h-3 text-[#DFC186]" />
                       <span>View</span>
                     </span>
-                    <span className="p-2 rounded-full bg-black/40 backdrop-blur-xs text-[#DFC186]">
+                    <span className="p-2 rounded-full bg-black/50 backdrop-blur-xs text-[#DFC186] border border-[#DFC186]/40">
                       <Maximize2 className="w-4 h-4" />
                     </span>
                   </div>
                   {photo.caption && (
-                    <div className="bg-black/30 backdrop-blur-xs p-2.5 rounded-lg border border-white/20">
+                    <div className="bg-black/40 backdrop-blur-xs p-2.5 rounded-lg border border-white/20">
                       <p className="text-xs sm:text-sm font-serif-display italic line-clamp-2 drop-shadow-sm text-white">
                         {photo.caption}
                       </p>
@@ -112,7 +115,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, theme }) => 
         </div>
       </div>
 
-      {/* Lightbox Modal */}
+      {/* Lightbox Modal with Luxury Rose Frame Corners */}
       <AnimatePresence>
         {selectedPhotoIndex !== null && (
           <motion.div
@@ -120,7 +123,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, theme }) => 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleCloseLightbox}
-            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-black/92 backdrop-blur-md flex items-center justify-center p-4"
           >
             {/* Close Button */}
             <button
@@ -145,20 +148,26 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, theme }) => 
               <ChevronRight className="w-6 h-6" />
             </button>
 
-            {/* Main Lightbox Image Card */}
+            {/* Main Lightbox Image Card with Museum Frame */}
             <motion.div
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.9 }}
               onClick={(e) => e.stopPropagation()}
-              className="max-w-4xl max-h-[85vh] flex flex-col items-center"
+              className="max-w-4xl max-h-[85vh] flex flex-col items-center relative"
             >
-              <img
-                src={photos[selectedPhotoIndex]?.url}
-                alt="Enlarged gallery view"
-                referrerPolicy="no-referrer"
-                className="max-h-[75vh] w-auto object-contain rounded-xl shadow-2xl border border-white/20"
-              />
+              <div className="relative p-3 sm:p-4 rounded-sm bg-white shadow-2xl ring-1 ring-white/20">
+                {/* Thin Inner Matting Line */}
+                <div className="absolute inset-1.5 sm:inset-2 border border-[#DFC186]/50 pointer-events-none" />
+                
+                <img
+                  src={photos[selectedPhotoIndex]?.url}
+                  alt="Enlarged gallery view"
+                  referrerPolicy="no-referrer"
+                  className="max-h-[72vh] w-auto object-contain shadow-inner relative z-10"
+                />
+              </div>
+
               {photos[selectedPhotoIndex]?.caption && (
                 <p className="text-white text-sm sm:text-base font-serif-display italic mt-3 text-center px-4">
                   {photos[selectedPhotoIndex]?.caption}

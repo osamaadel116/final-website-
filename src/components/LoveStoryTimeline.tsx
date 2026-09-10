@@ -21,6 +21,9 @@ export const LoveStoryTimeline: React.FC<LoveStoryTimelineProps> = ({ timeline, 
           <h2 className="font-serif-display text-3xl sm:text-4xl font-bold text-[#2E2420] mt-1">
             How Forever Began
           </h2>
+          <h3 dir="rtl" className="font-serif-display text-2xl sm:text-3xl font-bold text-[#2E2420] mt-1 mb-2" style={{ fontFamily: "'Amiri', 'Traditional Arabic', serif" }}>
+            كيف بدأ الأبد
+          </h3>
           <p className="font-sans-body text-xs sm:text-sm text-[#736357] max-w-md mx-auto mt-2 italic">
             "Every love story is beautiful, but ours is our favorite."
           </p>

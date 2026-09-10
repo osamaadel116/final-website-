@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Calendar, Clock, MapPin, Sparkles, ChevronDown, Heart } from 'lucide-react';
 import { WeddingConfig } from '../types';
 import { WatercolorCorner, WatercolorWreath, WatercolorDivider } from './WatercolorFlorals';
-import { BotanicalRoseFrameCorner } from './BotanicalRoseDecorations';
+import { BotanicalRoseFrameCorner, BotanicalRoseArchCrown, GoldenRococoOvalFrame } from './BotanicalRoseDecorations';
 
 interface HeroSectionProps {
   config: WeddingConfig;
@@ -111,49 +111,35 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ config, onScrollToNext
           </span>
         </div>
 
-        {/* Elegant Arch Image of the Couple with Luxury Rose & Filigree Frame */}
-        <div className="relative my-4 group">
-          {/* Decorative Rose Garlands in Frame Corners */}
-          <BotanicalRoseFrameCorner
-            theme={activeTheme}
-            variant="top-left"
-            className="absolute -top-6 -left-6 w-20 sm:w-24 h-20 sm:h-24 z-20"
-          />
-          <BotanicalRoseFrameCorner
-            theme={activeTheme}
-            variant="top-right"
-            className="absolute -top-6 -right-6 w-20 sm:w-24 h-20 sm:h-24 z-20"
-          />
-          <BotanicalRoseFrameCorner
-            theme={activeTheme}
-            variant="bottom-left"
-            className="absolute -bottom-6 -left-6 w-20 sm:w-24 h-20 sm:h-24 z-20"
-          />
-          <BotanicalRoseFrameCorner
-            theme={activeTheme}
-            variant="bottom-right"
-            className="absolute -bottom-6 -right-6 w-20 sm:w-24 h-20 sm:h-24 z-20"
-          />
-
-          {/* Golden Outer Halo Frame */}
-          <div className="absolute -inset-2 rounded-t-full rounded-b-3xl border border-[#DFC186]/50 bg-gradient-to-b from-[#DFC186]/20 via-transparent to-[#B69A5E]/25 -z-10 blur-xs" />
-
-          {/* Double Golden Bevel Frame Container */}
-          <div className="w-52 sm:w-64 h-72 sm:h-88 rounded-t-full rounded-b-2xl overflow-hidden border-4 border-white shadow-2xl p-1.5 bg-gradient-to-b from-[#DFC186] via-[#FAF7F2] to-[#B69A5E] ring-1 ring-[#DFC186]/70">
-            <div className="w-full h-full rounded-t-full rounded-b-xl overflow-hidden relative">
+        {/* Ornate Oval Image Frame */}
+        <div className="relative my-8 group w-full flex justify-center items-center">
+          <div className="relative w-64 sm:w-80 h-[22rem] sm:h-[28rem] flex items-center justify-center">
+            {/* The SVG Ornate Frame */}
+            <GoldenRococoOvalFrame 
+              className="absolute inset-0 z-20 w-[100%] h-[100%] left-0 top-0 transition-transform duration-700 group-hover:scale-105" 
+              strokeColor="#CBA153" 
+            />
+            
+            {/* Oval Masked Image */}
+            <div 
+              className="relative w-[75%] h-[80%] overflow-hidden bg-[#FAF7F2] z-10 shadow-lg"
+              style={{ borderRadius: '50% / 50%' }}
+            >
               <img
                 src={config.gallery[0]?.url || config.couple.groom.photoUrl}
                 alt="The Happy Couple"
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
               />
-              {/* Subtle Ambient Vignette on Image */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#2C3E50]/30 via-transparent to-transparent pointer-events-none" />
+              <div 
+                className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.15)] pointer-events-none" 
+                style={{ borderRadius: '50% / 50%' }}
+              />
             </div>
           </div>
 
-          {/* Golden Ring Frame Badge with Rose Ornament */}
-          <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-[#DFC186] shadow-lg flex items-center gap-1.5 text-[11px] font-serif-display tracking-widest uppercase font-semibold text-[#43657D] z-30">
+          {/* Golden Ring Frame Badge */}
+          <div className="absolute bottom-[22px] left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-white border border-[#DFC186] shadow-xl flex items-center gap-2 text-xs font-serif-display tracking-widest uppercase font-semibold text-[#8C6D3B] z-30">
             <Heart className="w-3 h-3 text-[#B69A5E] fill-[#DFC186]" />
             <span>{config.couple.hashtag}</span>
           </div>
@@ -188,14 +174,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ config, onScrollToNext
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className="max-w-lg mx-auto px-4 my-2"
+            className="max-w-xl mx-auto px-4 my-3"
           >
-            <p className="font-serif-display italic text-sm sm:text-base text-[#6E5D52] leading-relaxed">
-              "{config.couple.quote.text}"
-            </p>
-            <span className="text-xs font-sans-body font-medium uppercase tracking-widest text-[#9E8E81] mt-1 block">
-              — {config.couple.quote.source}
-            </span>
+            {config.couple.quote.arabicText && (
+              <p
+                dir="rtl"
+                className="font-serif-display text-lg sm:text-xl md:text-2xl text-[#2E2420] font-semibold leading-relaxed tracking-wide mb-2"
+                style={{ fontFamily: "'Amiri', 'Traditional Arabic', serif" }}
+              >
+                "{config.couple.quote.arabicText}"
+              </p>
+            )}
+            {config.couple.quote.text ? (
+              <p className="font-serif-display italic text-sm sm:text-base text-[#6E5D52] leading-relaxed">
+                "{config.couple.quote.text}"
+              </p>
+            ) : null}
+            {config.couple.quote.source && (
+              <span className="text-xs font-sans-body font-medium uppercase tracking-widest text-[#9E8E81] mt-1.5 block">
+                — {config.couple.quote.source}
+              </span>
+            )}
           </motion.div>
         )}
 

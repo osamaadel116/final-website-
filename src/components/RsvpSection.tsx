@@ -108,6 +108,9 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
           <h2 className="font-serif-display text-3xl sm:text-4xl font-bold text-[#2E2420] mt-1">
             RSVP & Attendance
           </h2>
+          <h3 dir="rtl" className="font-serif-display text-2xl sm:text-3xl font-bold text-[#2E2420] mt-1 mb-2" style={{ fontFamily: "'Amiri', 'Traditional Arabic', serif" }}>
+            تأكيد الحضور
+          </h3>
           <p className="font-sans-body text-xs sm:text-sm text-[#736357] max-w-md mx-auto mt-2">
             Please kindly respond on or before{' '}
             <span className="font-semibold text-[#8C6D3B]">

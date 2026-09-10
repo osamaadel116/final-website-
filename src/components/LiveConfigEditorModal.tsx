@@ -16,6 +16,8 @@ import {
   Smartphone,
   Monitor,
   Eye,
+  Trash2,
+  Plus,
 } from 'lucide-react';
 import { WeddingConfig } from '../types';
 
@@ -47,6 +49,8 @@ export const LiveConfigEditorModal: React.FC<LiveConfigEditorModalProps> = ({
   const [activeTab, setActiveTab] = useState<'general' | 'couple' | 'events' | 'music' | 'theme' | 'export'>('general');
   const [copiedCode, setCopiedCode] = useState(false);
   const [customAudioInput, setCustomAudioInput] = useState('');
+  const [customTitleInput, setCustomTitleInput] = useState('');
+  const [customArtistInput, setCustomArtistInput] = useState('');
 
   const handleUpdate = (updater: (prev: WeddingConfig) => WeddingConfig) => {
     onUpdateConfig(updater(config));
@@ -73,16 +77,42 @@ export const LiveConfigEditorModal: React.FC<LiveConfigEditorModalProps> = ({
     if (!customAudioInput.trim()) return;
     const newTrack = {
       id: `custom-${Date.now()}`,
-      title: 'Custom Wedding Song',
-      artist: 'Custom Music URL',
+      title: customTitleInput.trim() || 'Custom Wedding Song',
+      artist: customArtistInput.trim() || 'Custom Audio',
       audioUrl: customAudioInput.trim(),
     };
     handleUpdate((prev) => ({
       ...prev,
-      musicTracks: [newTrack, ...prev.musicTracks],
-      defaultTrackIndex: 0,
+      musicTracks: [...(prev.musicTracks || []), newTrack],
+      defaultTrackIndex: (prev.musicTracks || []).length,
     }));
     setCustomAudioInput('');
+    setCustomTitleInput('');
+    setCustomArtistInput('');
+  };
+
+  const handleRemoveTrack = (e: React.MouseEvent, trackId: string) => {
+    e.stopPropagation();
+    handleUpdate((prev) => {
+      const tracks = prev.musicTracks || [];
+      if (tracks.length <= 1) {
+        return prev;
+      }
+      const targetIndex = tracks.findIndex((t) => t.id === trackId);
+      if (targetIndex === -1) return prev;
+      const updatedTracks = tracks.filter((t) => t.id !== trackId);
+      let newDefaultIndex = prev.defaultTrackIndex;
+      if (targetIndex === prev.defaultTrackIndex) {
+        newDefaultIndex = Math.min(targetIndex, updatedTracks.length - 1);
+      } else if (targetIndex < prev.defaultTrackIndex) {
+        newDefaultIndex = Math.max(0, prev.defaultTrackIndex - 1);
+      }
+      return {
+        ...prev,
+        musicTracks: updatedTracks,
+        defaultTrackIndex: Math.max(0, newDefaultIndex),
+      };
+    });
   };
 
   if (!isOpen) return null;
@@ -350,6 +380,64 @@ export const LiveConfigEditorModal: React.FC<LiveConfigEditorModalProps> = ({
                     className="w-full px-3 py-1.5 rounded-lg border border-[#DCD0C0] bg-white"
                   />
                 </div>
+
+                <div className="p-3 bg-white rounded-xl border border-[#E6DCce] space-y-2">
+                  <h4 className="font-serif-display font-bold text-sm text-[#2E2420]">
+                    Scripture / Wedding Quote
+                  </h4>
+                  <div>
+                    <label className="block text-[#8C7A6B] mb-0.5">Arabic Verse (Optional)</label>
+                    <textarea
+                      rows={2}
+                      dir="rtl"
+                      value={config.couple.quote?.arabicText || ''}
+                      onChange={(e) =>
+                        handleUpdate((prev) => ({
+                          ...prev,
+                          couple: {
+                            ...prev.couple,
+                            quote: { ...prev.couple.quote, arabicText: e.target.value },
+                          },
+                        }))
+                      }
+                      className="w-full px-3 py-1.5 rounded-lg border border-[#DCD0C0] bg-[#FAF7F2] font-serif-display"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[#8C7A6B] mb-0.5">Quote / Translation Text</label>
+                    <textarea
+                      rows={2}
+                      value={config.couple.quote?.text || ''}
+                      onChange={(e) =>
+                        handleUpdate((prev) => ({
+                          ...prev,
+                          couple: {
+                            ...prev.couple,
+                            quote: { ...prev.couple.quote, text: e.target.value },
+                          },
+                        }))
+                      }
+                      className="w-full px-3 py-1.5 rounded-lg border border-[#DCD0C0] bg-[#FAF7F2]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[#8C7A6B] mb-0.5">Source / Reference</label>
+                    <input
+                      type="text"
+                      value={config.couple.quote?.source || ''}
+                      onChange={(e) =>
+                        handleUpdate((prev) => ({
+                          ...prev,
+                          couple: {
+                            ...prev.couple,
+                            quote: { ...prev.couple.quote, source: e.target.value },
+                          },
+                        }))
+                      }
+                      className="w-full px-3 py-1.5 rounded-lg border border-[#DCD0C0] bg-[#FAF7F2]"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
@@ -474,53 +562,132 @@ export const LiveConfigEditorModal: React.FC<LiveConfigEditorModalProps> = ({
             {/* 4. BACKGROUND MUSIC */}
             {activeTab === 'music' && (
               <div className="space-y-4 text-xs font-sans-body">
-                <p className="text-[#7A6B60]">
-                  Select the default background track or add your own direct audio link (.mp3):
-                </p>
-
-                <div className="space-y-2">
-                  {(config.musicTracks || []).map((track, idx) => (
-                    <div
-                      key={track.id}
-                      onClick={() =>
-                        handleUpdate((prev) => ({ ...prev, defaultTrackIndex: idx }))
-                      }
-                      className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                        config.defaultTrackIndex === idx
-                          ? 'border-[#C5A059] bg-white shadow-xs font-semibold'
-                          : 'border-[#E6DCce] bg-[#FAF7F2]'
-                      }`}
-                    >
-                      <div>
-                        <p className="text-sm font-serif-display text-[#2E2420]">{track.title}</p>
-                        <p className="text-[11px] text-[#8C7A6B]">{track.artist}</p>
-                      </div>
-                      {config.defaultTrackIndex === idx && (
-                        <span className="text-xs text-[#C5A059]">Active Track</span>
-                      )}
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <p className="text-[#7A6B60]">
+                    Select the active wedding track or remove unwanted songs:
+                  </p>
+                  <span className="text-[11px] text-[#A6988D]">
+                    {config.musicTracks?.length || 0} song{(config.musicTracks?.length || 0) === 1 ? '' : 's'}
+                  </span>
                 </div>
 
-                <div className="pt-3 border-t border-[#E8DECf]">
-                  <label className="block text-[#8C7A6B] mb-1 font-medium">
-                    Add Custom Song MP3 URL
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      placeholder="https://example.com/mysong.mp3"
-                      value={customAudioInput}
-                      onChange={(e) => setCustomAudioInput(e.target.value)}
-                      className="flex-1 px-3 py-1.5 rounded-lg border border-[#DCD0C0] bg-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddCustomTrack}
-                      className="px-3 py-1.5 bg-[#3D2B24] text-white rounded-lg hover:bg-black"
-                    >
-                      Add
-                    </button>
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {(config.musicTracks || []).map((track, idx) => {
+                    const isActive = config.defaultTrackIndex === idx;
+                    const canDelete = (config.musicTracks || []).length > 1;
+
+                    return (
+                      <div
+                        key={track.id || `track-${idx}`}
+                        onClick={() =>
+                          handleUpdate((prev) => ({ ...prev, defaultTrackIndex: idx }))
+                        }
+                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 group ${
+                          isActive
+                            ? 'border-[#C5A059] bg-white shadow-xs font-semibold ring-1 ring-[#C5A059]/30'
+                            : 'border-[#E6DCce] bg-[#FCFAF6] hover:border-[#D4C3B2] hover:bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div
+                            className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs ${
+                              isActive
+                                ? 'bg-[#C5A059] text-white'
+                                : 'bg-[#EAE1D3] text-[#7A6A5E]'
+                            }`}
+                          >
+                            <Music className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-serif-display text-[#2E2420] truncate">
+                                {track.title}
+                              </p>
+                              {isActive && (
+                                <span className="text-[10px] uppercase font-sans-body font-semibold px-2 py-0.5 rounded-full bg-[#FAF3E5] text-[#9E782F] border border-[#E9D6AF]">
+                                  Active
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-[#8C7A6B] truncate font-normal">
+                              {track.artist}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Remove Song Action Button */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={(e) => handleRemoveTrack(e, track.id)}
+                            disabled={!canDelete}
+                            title={
+                              canDelete
+                                ? `Remove "${track.title}"`
+                                : 'At least one background song is required'
+                            }
+                            className={`p-2 rounded-lg transition-colors ${
+                              canDelete
+                                ? 'text-[#A6988D] hover:text-red-600 hover:bg-red-50 cursor-pointer'
+                                : 'text-gray-300 cursor-not-allowed opacity-50'
+                            }`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-3 border-t border-[#E8DECf] space-y-2 bg-white/70 p-3 rounded-xl border border-[#E8DECf]/80">
+                  <div className="flex items-center gap-1.5 font-serif-display font-bold text-xs text-[#2E2420]">
+                    <Plus className="w-3.5 h-3.5 text-[#C5A059]" />
+                    <span>Add Custom Song</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-[#8C7A6B] mb-0.5">Song Title (optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. A Thousand Years"
+                        value={customTitleInput}
+                        onChange={(e) => setCustomTitleInput(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#DCD0C0] bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-[#8C7A6B] mb-0.5">Artist (optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Christina Perri"
+                        value={customArtistInput}
+                        onChange={(e) => setCustomArtistInput(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-[#DCD0C0] bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] text-[#8C7A6B] mb-0.5">MP3 Audio URL *</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        placeholder="https://example.com/mysong.mp3"
+                        value={customAudioInput}
+                        onChange={(e) => setCustomAudioInput(e.target.value)}
+                        className="flex-1 px-2.5 py-1.5 text-xs rounded-lg border border-[#DCD0C0] bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddCustomTrack}
+                        disabled={!customAudioInput.trim()}
+                        className="px-4 py-1.5 bg-[#3D2B24] text-white rounded-lg hover:bg-black font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Add
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

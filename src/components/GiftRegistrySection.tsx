@@ -35,6 +35,9 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({
           <h2 className="font-serif-display text-3xl sm:text-4xl font-bold text-[#2E2420] mt-1">
             Wedding Gift & Registry
           </h2>
+          <h3 dir="rtl" className="font-serif-display text-2xl sm:text-3xl font-bold text-[#2E2420] mt-1 mb-2" style={{ fontFamily: "'Amiri', 'Traditional Arabic', serif" }}>
+            سجل هدايا الزفاف
+          </h3>
           <p className="font-sans-body text-xs sm:text-sm text-[#736357] max-w-lg mx-auto mt-2 leading-relaxed">
             Your presence at our wedding is the greatest gift of all. However, if you wish to honor us with a gift, a digital contribution or registry item would be warmly appreciated.
           </p>

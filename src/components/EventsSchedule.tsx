@@ -64,6 +64,9 @@ export const EventsSchedule: React.FC<EventsScheduleProps> = ({ events, theme })
           <h2 className="font-serif-display text-3xl sm:text-4xl font-bold text-[#2E2420] mt-1">
             Wedding Itinerary & Venue
           </h2>
+          <h3 dir="rtl" className="font-serif-display text-2xl sm:text-3xl font-bold text-[#2E2420] mt-1 mb-2" style={{ fontFamily: "'Amiri', 'Traditional Arabic', serif" }}>
+            تفاصيل الزفاف والمكان
+          </h3>
           <BotanicalRoseHeaderOrnament theme={theme} className="my-2" />
           <p className="font-sans-body text-xs sm:text-sm text-[#5D6F7C] max-w-md mx-auto">
             We are honored to have you witness and share the joy of our holy union and celebration.
@@ -172,21 +175,6 @@ export const EventsSchedule: React.FC<EventsScheduleProps> = ({ events, theme })
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>Open Maps</span>
                   </a>
-                </div>
-
-                {/* Embedded Map Container */}
-                <div className="mt-4 rounded-xl overflow-hidden border border-[#D9CEBF] shadow-inner">
-                  <iframe
-                    title={`${event.venueName} map`}
-                    width="100%"
-                    height="200"
-                    style={{ border: 0 }}
-                    loading="lazy"
-                    allowFullScreen
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                      event.mapEmbedQuery || event.venueAddress
-                    )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                  />
                 </div>
               </div>
             </motion.div>

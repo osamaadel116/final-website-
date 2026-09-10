@@ -53,7 +53,10 @@ export default function App() {
                   : initialWeddingConfig.couple.groom.photoUrl,
             },
             bride: { ...initialWeddingConfig.couple.bride, ...(parsed.couple?.bride || {}) },
-            quote: { ...initialWeddingConfig.couple.quote, ...(parsed.couple?.quote || {}) },
+            quote:
+              parsed.couple?.quote?.source === 'Colossians 3:14' || !parsed.couple?.quote?.arabicText || parsed.couple?.quote?.text?.includes('tranquility in them')
+                ? initialWeddingConfig.couple.quote
+                : { ...initialWeddingConfig.couple.quote, ...(parsed.couple?.quote || {}) },
           },
           weddingDate: {
             ...initialWeddingConfig.weddingDate,
@@ -173,6 +176,13 @@ export default function App() {
   const handleUpdateConfig = (newConfig: WeddingConfig) => {
     setConfig(newConfig);
     localStorage.setItem('wedding_custom_config', JSON.stringify(newConfig));
+    if (newConfig.musicTracks && newConfig.musicTracks.length > 0) {
+      if (newConfig.defaultTrackIndex !== undefined && newConfig.defaultTrackIndex >= 0 && newConfig.defaultTrackIndex < newConfig.musicTracks.length) {
+        setCurrentTrackIndex(newConfig.defaultTrackIndex);
+      } else {
+        setCurrentTrackIndex((prev) => Math.min(prev, newConfig.musicTracks.length - 1));
+      }
+    }
   };
 
   const handleResetToDefaults = () => {

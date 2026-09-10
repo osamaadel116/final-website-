@@ -23,8 +23,9 @@ export const weddingConfig: WeddingConfig = {
   couple: {
     hashtag: '#OmarFoundHisAya',
     quote: {
-      text: 'And above all these put on love, which binds everything together in perfect harmony.',
-      source: 'Colossians 3:14',
+      arabicText: 'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً',
+      text: '',
+      source: 'Surah Ar-Rum (30:21)',
     },
     groom: {
       name: 'Omar Emad',
@@ -123,6 +124,12 @@ export const weddingConfig: WeddingConfig = {
 
   // 6. BACKGROUND MUSIC PLAYLIST (Royalty-free high quality wedding piano & acoustic tracks)
   musicTracks: [
+    {
+      id: 'sleep-walk',
+      title: 'Sleep Walk',
+      artist: 'Uploaded Track',
+      audioUrl: '/18 - Sleep Walk.mp3',
+    },
     {
       id: 'custom-song',
       title: 'Our Special Song',

@@ -14,6 +14,7 @@ export interface CoupleDetails {
   bride: PersonInfo;
   hashtag: string;
   quote: {
+    arabicText?: string;
     text: string;
     source: string;
   };

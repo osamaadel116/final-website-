@@ -134,15 +134,23 @@ export const OpeningEnvelopeModal: React.FC<OpeningEnvelopeModalProps> = ({
 
             {/* Guest Personalization Box */}
             <div className="w-full my-6 p-4 rounded-lg bg-[#F5EFE6]/80 border border-[#E3D7C7] text-center shadow-inner">
-              <p className="text-[11px] uppercase tracking-widest text-[#8C7A6B] mb-1 font-medium">
-                Dear Honorable Guest
-              </p>
-              <div className="font-serif-display text-xl sm:text-2xl font-semibold text-[#2E2723] break-words">
-                {guestName || 'Distinguished Guest'}
+              {guestName && (
+                <div className="font-serif-display text-xl sm:text-2xl font-semibold text-[#2E2723] break-words mb-2">
+                  {guestName}
+                </div>
+              )}
+              <div className="space-y-2">
+                <p className="text-xs sm:text-[13px] text-[#5E4E44] font-serif-display italic leading-relaxed">
+                  "With joyful hearts, we invite you to celebrate our wedding and share with us the beginning of our forever."
+                </p>
+                <p
+                  dir="rtl"
+                  className="text-xs sm:text-sm text-[#4A3B32] font-semibold leading-relaxed"
+                  style={{ fontFamily: "'Amiri', 'Traditional Arabic', serif" }}
+                >
+                  "بقلوبٍ يملؤها الفرح، ندعوكم لمشاركتنا الاحتفال بزفافنا وبدء أجمل فصول حياتنا معًا."
+                </p>
               </div>
-              <p className="text-xs text-[#7B6E65] mt-1 italic font-sans-body">
-                You are cordially invited to celebrate our union
-              </p>
             </div>
 
             {/* Audio Note & Open Button */}

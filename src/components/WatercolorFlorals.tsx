@@ -376,17 +376,38 @@ export const FallingPetals: React.FC<{ tone?: 'blush' | 'sage' | 'dustyBlue' | '
 }) => {
   const c = colorMaps[tone] || colorMaps.blush;
 
-  // 12 subtle falling petals staggered with CSS animations
+  // 30 subtle falling petals staggered with CSS animations
   const petals = [
-    { id: 1, left: '8%', delay: '0s', duration: '14s', size: 14, rot: 45 },
-    { id: 2, left: '22%', delay: '3s', duration: '18s', size: 18, rot: 90 },
-    { id: 3, left: '38%', delay: '7s', duration: '15s', size: 12, rot: 135 },
-    { id: 4, left: '55%', delay: '1.5s', duration: '20s', size: 16, rot: 30 },
-    { id: 5, left: '72%', delay: '5s', duration: '16s', size: 20, rot: 75 },
-    { id: 6, left: '88%', delay: '9s', duration: '17s', size: 13, rot: 160 },
-    { id: 7, left: '15%', delay: '11s', duration: '19s', size: 15, rot: 210 },
-    { id: 8, left: '48%', delay: '13s', duration: '13s', size: 17, rot: 280 },
-    { id: 9, left: '82%', delay: '4s', duration: '15s', size: 14, rot: 310 },
+    { id: 1, left: '8%', delay: '0s', duration: '14s', size: 14, rot: 45, anim: 'float-petal' },
+    { id: 2, left: '22%', delay: '3s', duration: '18s', size: 18, rot: 90, anim: 'float-petal-alt' },
+    { id: 3, left: '38%', delay: '7s', duration: '15s', size: 12, rot: 135, anim: 'float-petal' },
+    { id: 4, left: '55%', delay: '1.5s', duration: '20s', size: 16, rot: 30, anim: 'float-petal-alt' },
+    { id: 5, left: '72%', delay: '5s', duration: '16s', size: 20, rot: 75, anim: 'float-petal' },
+    { id: 6, left: '88%', delay: '9s', duration: '17s', size: 13, rot: 160, anim: 'float-petal-alt' },
+    { id: 7, left: '15%', delay: '11s', duration: '19s', size: 15, rot: 210, anim: 'float-petal' },
+    { id: 8, left: '48%', delay: '13s', duration: '13s', size: 17, rot: 280, anim: 'float-petal-alt' },
+    { id: 9, left: '82%', delay: '4s', duration: '15s', size: 14, rot: 310, anim: 'float-petal' },
+    { id: 10, left: '5%', delay: '2s', duration: '16s', size: 15, rot: 15, anim: 'float-petal-alt' },
+    { id: 11, left: '28%', delay: '8s', duration: '22s', size: 12, rot: 65, anim: 'float-petal' },
+    { id: 12, left: '42%', delay: '1.2s', duration: '14s', size: 19, rot: 115, anim: 'float-petal-alt' },
+    { id: 13, left: '60%', delay: '6.5s', duration: '18s', size: 14, rot: 190, anim: 'float-petal' },
+    { id: 14, left: '78%', delay: '12s', duration: '21s', size: 16, rot: 250, anim: 'float-petal-alt' },
+    { id: 15, left: '95%', delay: '3.5s', duration: '15s', size: 18, rot: 325, anim: 'float-petal' },
+    { id: 16, left: '12%', delay: '10s', duration: '17s', size: 13, rot: 80, anim: 'float-petal-alt' },
+    { id: 17, left: '33%', delay: '5.5s', duration: '19s', size: 21, rot: 140, anim: 'float-petal' },
+    { id: 18, left: '51%', delay: '9.5s', duration: '16s', size: 15, rot: 200, anim: 'float-petal-alt' },
+    { id: 19, left: '68%', delay: '0.5s', duration: '14s', size: 17, rot: 260, anim: 'float-petal' },
+    { id: 20, left: '85%', delay: '7.5s', duration: '20s', size: 12, rot: 340, anim: 'float-petal-alt' },
+    { id: 21, left: '18%', delay: '1.8s', duration: '15s', size: 16, rot: 25, anim: 'float-petal' },
+    { id: 22, left: '39%', delay: '11.5s', duration: '18s', size: 14, rot: 105, anim: 'float-petal-alt' },
+    { id: 23, left: '64%', delay: '4.5s', duration: '17s', size: 19, rot: 175, anim: 'float-petal' },
+    { id: 24, left: '92%', delay: '8.5s', duration: '21s', size: 13, rot: 235, anim: 'float-petal-alt' },
+    { id: 25, left: '10%', delay: '6.2s', duration: '16s', size: 18, rot: 55, anim: 'float-petal' },
+    { id: 26, left: '25%', delay: '14s', duration: '19s', size: 15, rot: 125, anim: 'float-petal-alt' },
+    { id: 27, left: '45%', delay: '2.5s', duration: '15s', size: 20, rot: 185, anim: 'float-petal' },
+    { id: 28, left: '75%', delay: '10.5s', duration: '22s', size: 14, rot: 295, anim: 'float-petal-alt' },
+    { id: 29, left: '80%', delay: '1.1s', duration: '14s', size: 16, rot: 155, anim: 'float-petal' },
+    { id: 30, left: '90%', delay: '13.5s', duration: '18s', size: 17, rot: 315, anim: 'float-petal-alt' },
   ];
 
   return (
@@ -397,6 +418,7 @@ export const FallingPetals: React.FC<{ tone?: 'blush' | 'sage' | 'dustyBlue' | '
           className="petal-floating"
           style={{
             left: p.left,
+            animationName: p.anim,
             animationDelay: p.delay,
             animationDuration: p.duration,
           }}

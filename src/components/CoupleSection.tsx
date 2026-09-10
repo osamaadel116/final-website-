@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Heart } from 'lucide-react';
 import { CoupleDetails, FloralTheme } from '../types';
 import { WatercolorCorner, WatercolorDivider } from './WatercolorFlorals';
-import { BotanicalRoseHeaderOrnament, BotanicalRoseFrameCorner } from './BotanicalRoseDecorations';
+import { BotanicalRoseHeaderOrnament, BotanicalRoseFrameCorner, BotanicalRoseArchCrown, GoldenRococoOvalFrame } from './BotanicalRoseDecorations';
 
 interface CoupleSectionProps {
   couple: CoupleDetails;
@@ -34,6 +34,9 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({ couple, theme }) =
           <h2 className="font-serif-display text-3xl sm:text-4xl font-bold text-[#2E2420] mt-1">
             Groom & Bride
           </h2>
+          <h3 dir="rtl" className="font-serif-display text-2xl sm:text-3xl font-bold text-[#2E2420] mt-1 mb-2" style={{ fontFamily: "'Amiri', 'Traditional Arabic', serif" }}>
+            العريس والعروس
+          </h3>
           <BotanicalRoseHeaderOrnament theme={theme} className="my-2" />
           <p className="font-sans-body text-xs sm:text-sm text-[#5D6F7C] max-w-md mx-auto italic">
             "Two souls with but a single thought, two hearts that beat as one."
@@ -51,25 +54,31 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({ couple, theme }) =
             transition={{ duration: 0.7 }}
             className="bg-[#FCFAF6] border border-[#DFC186]/60 rounded-3xl p-6 sm:p-8 shadow-md flex flex-col items-center text-center relative overflow-hidden"
           >
-            {/* Arch Groom Photo with Ornate Golden and Rose Frame */}
-            <div className="relative mb-4 group">
-              <BotanicalRoseFrameCorner
-                theme={theme}
-                variant="top-left"
-                className="absolute -top-3 -left-3 w-12 h-12 z-20"
-              />
-              <BotanicalRoseFrameCorner
-                theme={theme}
-                variant="top-right"
-                className="absolute -top-3 -right-3 w-12 h-12 z-20"
-              />
-              <div className="w-36 h-48 sm:w-44 sm:h-56 rounded-t-full rounded-b-2xl overflow-hidden border-2 border-[#DFC186] p-1 bg-gradient-to-b from-[#DFC186]/40 to-white shadow-md">
-                <img
-                  src={couple.groom.photoUrl}
-                  alt={couple.groom.name}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover rounded-t-full rounded-b-xl group-hover:scale-105 transition-transform duration-500"
+            {/* Groom Photo with Ornate Oval Frame */}
+            <div className="relative mb-6 mt-3 group w-full flex justify-center items-center">
+              <div className="relative w-48 sm:w-56 h-[17rem] sm:h-[20rem] flex items-center justify-center">
+                {/* The SVG Ornate Frame */}
+                <GoldenRococoOvalFrame 
+                  className="absolute inset-0 z-20 w-[100%] h-[100%] left-0 top-0 transition-transform duration-700 group-hover:scale-105" 
+                  strokeColor="#CBA153" 
                 />
+                
+                {/* Oval Masked Image */}
+                <div 
+                  className="relative w-[75%] h-[80%] overflow-hidden bg-[#FAF7F2] z-10 shadow-lg"
+                  style={{ borderRadius: '50% / 50%' }}
+                >
+                  <img
+                    src={couple.groom.photoUrl}
+                    alt={couple.groom.name}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                  />
+                  <div 
+                    className="absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.1)] pointer-events-none"
+                    style={{ borderRadius: '50% / 50%' }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -83,16 +92,6 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({ couple, theme }) =
             <p className="text-xs font-serif-display text-[#5D6F7C] italic mb-3">
               {couple.groom.fullNameWithTitle}
             </p>
-
-            <p className="text-xs font-sans-body text-[#63554B] leading-relaxed mb-4 max-w-xs">
-              {couple.groom.bio}
-            </p>
-
-            <div className="w-full pt-3 border-t border-[#EAE1D3] text-xs text-[#7A6A5E] font-serif-display">
-              <p className="font-semibold text-[#4A3D35]">Son of:</p>
-              <p>{couple.groom.fatherName}</p>
-              <p>& {couple.groom.motherName}</p>
-            </div>
           </motion.div>
 
           {/* Center Heart Emblem Connector */}
@@ -108,25 +107,31 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({ couple, theme }) =
             transition={{ duration: 0.7 }}
             className="bg-[#FCFAF6] border border-[#DFC186]/60 rounded-3xl p-6 sm:p-8 shadow-md flex flex-col items-center text-center relative overflow-hidden"
           >
-            {/* Arch Bride Photo with Ornate Golden and Rose Frame */}
-            <div className="relative mb-4 group">
-              <BotanicalRoseFrameCorner
-                theme={theme}
-                variant="top-left"
-                className="absolute -top-3 -left-3 w-12 h-12 z-20"
-              />
-              <BotanicalRoseFrameCorner
-                theme={theme}
-                variant="top-right"
-                className="absolute -top-3 -right-3 w-12 h-12 z-20"
-              />
-              <div className="w-36 h-48 sm:w-44 sm:h-56 rounded-t-full rounded-b-2xl overflow-hidden border-2 border-[#DFC186] p-1 bg-gradient-to-b from-[#DFC186]/40 to-white shadow-md">
-                <img
-                  src={couple.bride.photoUrl}
-                  alt={couple.bride.name}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover rounded-t-full rounded-b-xl group-hover:scale-105 transition-transform duration-500"
+            {/* Bride Photo with Ornate Oval Frame */}
+            <div className="relative mb-6 mt-3 group w-full flex justify-center items-center">
+              <div className="relative w-48 sm:w-56 h-[17rem] sm:h-[20rem] flex items-center justify-center">
+                {/* The SVG Ornate Frame */}
+                <GoldenRococoOvalFrame 
+                  className="absolute inset-0 z-20 w-[100%] h-[100%] left-0 top-0 transition-transform duration-700 group-hover:scale-105" 
+                  strokeColor="#CBA153" 
                 />
+                
+                {/* Oval Masked Image */}
+                <div 
+                  className="relative w-[75%] h-[80%] overflow-hidden bg-[#FAF7F2] z-10 shadow-lg"
+                  style={{ borderRadius: '50% / 50%' }}
+                >
+                  <img
+                    src={couple.bride.photoUrl}
+                    alt={couple.bride.name}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                  />
+                  <div 
+                    className="absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.1)] pointer-events-none"
+                    style={{ borderRadius: '50% / 50%' }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -140,16 +145,6 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({ couple, theme }) =
             <p className="text-xs font-serif-display text-[#5D6F7C] italic mb-3">
               {couple.bride.fullNameWithTitle}
             </p>
-
-            <p className="text-xs font-sans-body text-[#63554B] leading-relaxed mb-4 max-w-xs">
-              {couple.bride.bio}
-            </p>
-
-            <div className="w-full pt-3 border-t border-[#EAE1D3] text-xs text-[#7A6A5E] font-serif-display">
-              <p className="font-semibold text-[#4A3D35]">Daughter of:</p>
-              <p>{couple.bride.fatherName}</p>
-              <p>& {couple.bride.motherName}</p>
-            </div>
           </motion.div>
         </div>
       </div>
