@@ -123,18 +123,22 @@ export default function App() {
     return INITIAL_WISHES;
   });
 
-  // Modal customizer state
+  // Modal customizer state (hidden by default)
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
   const [isMobilePreview, setIsMobilePreview] = useState(false);
   const [showFallingPetals, setShowFallingPetals] = useState(true);
+  const [showEditButton, setShowEditButton] = useState(false);
 
-  // Parse URL query parameter for personalized greeting
+  // Parse URL query parameter for personalized greeting and admin/edit visibility
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const toParam = params.get('to') || params.get('guest') || params.get('name');
       if (toParam) {
         setGuestName(decodeURIComponent(toParam));
+      }
+      if (params.get('edit') === 'true' || params.get('admin') === 'true') {
+        setShowEditButton(true);
       }
     }
   }, []);
@@ -264,22 +268,24 @@ export default function App() {
         accentColor={activeTheme.primaryColor}
       />
 
-      {/* Top Quick Bar for Auto Video Mode & Customizer */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
-        className="fixed top-5 right-4 z-40 flex items-center gap-2"
-      >
-        {/* Live Edit Details Button */}
-        <button
-          onClick={() => setIsCustomizerOpen(true)}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#2C2420]/90 backdrop-blur-md border border-[#DFC186] text-[#F3E5AB] text-xs font-semibold shadow-md hover:bg-[#3D2B24] transition-all cursor-pointer"
+      {/* Top Quick Bar for Auto Video Mode & Customizer (hidden by default) */}
+      {showEditButton && (
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
+          className="fixed top-5 right-4 z-40 flex items-center gap-2"
         >
-          <SlidersHorizontal className="w-3.5 h-3.5 text-[#DFC186]" />
-          <span>Edit</span>
-        </button>
-      </motion.div>
+          {/* Live Edit Details Button */}
+          <button
+            onClick={() => setIsCustomizerOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#2C2420]/90 backdrop-blur-md border border-[#DFC186] text-[#F3E5AB] text-xs font-semibold shadow-md hover:bg-[#3D2B24] transition-all cursor-pointer"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#DFC186]" />
+            <span>Edit</span>
+          </button>
+        </motion.div>
+      )}
 
       {/* Main Content Layout with optional Smartphone Bezel for PC testing */}
       <main
