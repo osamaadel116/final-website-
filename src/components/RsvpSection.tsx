@@ -6,6 +6,7 @@ import { WeddingConfig, RsvpData, FloralTheme } from '../types';
 import { WatercolorDivider } from './WatercolorFlorals';
 import { getAccessToken } from '../services/googleAuth';
 import { appendRsvpRow } from '../services/googleSheets';
+import { submitRsvpToFirestore } from '../services/firebase';
 
 interface RsvpSectionProps {
   config: WeddingConfig;
@@ -62,7 +63,25 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1m5lxcrDtgKs7zhJuPgkCpVIq9xkEsZcASnzBP8PEmhSsBFvZw6Q-48k4bPErzz8Wpw/exec';
 
     try {
-      // 1. If host is logged into Google Sheets and has a sheet configured, write directly via Google Sheets v4 API
+      // 1. Save to Firebase Firestore Database
+      try {
+        const attendanceMap: Record<string, 'yes' | 'no' | 'maybe'> = {
+          attending: 'yes',
+          regrets: 'no',
+          maybe: 'maybe',
+        };
+        await submitRsvpToFirestore({
+          guestName: formData.guestName,
+          attendance: attendanceMap[formData.attendance] || 'yes',
+          guestCount: formData.numberOfGuests,
+          eventsAttending: formData.eventIds,
+          message: formData.message,
+        });
+      } catch (firestoreErr) {
+        console.warn('Firestore RSVP save note:', firestoreErr);
+      }
+
+      // 2. If host is logged into Google Sheets and has a sheet configured, write directly via Google Sheets v4 API
       try {
         const accessToken = await getAccessToken();
         const sheetId = localStorage.getItem('wedding_google_sheet_id');
@@ -75,19 +94,23 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
         console.warn('Direct Google Sheets append notice:', directSheetErr);
       }
 
-      // 2. Also send to Google Apps Script Web App backup
-      const submitData = new URLSearchParams();
-      submitData.append('guestName', formData.guestName);
-      submitData.append('attendance', formData.attendance);
-      submitData.append('numberOfGuests', formData.numberOfGuests.toString());
-      submitData.append('events', formData.eventIds.join(', '));
-      submitData.append('message', formData.message);
+      // 3. Also send to Google Apps Script Web App backup
+      try {
+        const submitData = new URLSearchParams();
+        submitData.append('guestName', formData.guestName);
+        submitData.append('attendance', formData.attendance);
+        submitData.append('numberOfGuests', formData.numberOfGuests.toString());
+        submitData.append('events', formData.eventIds.join(', '));
+        submitData.append('message', formData.message);
 
-      await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        body: submitData,
-        mode: 'no-cors', // Essential to prevent CORS errors from Google
-      });
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          body: submitData,
+          mode: 'no-cors', // Essential to prevent CORS errors from Google
+        });
+      } catch (scriptErr) {
+        console.warn('Google Apps Script backup note:', scriptErr);
+      }
 
       // Fire confetti if attending
       if (formData.attendance === 'attending') {
@@ -108,7 +131,6 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
       setIsSubmitted(true);
     } catch (error) {
       console.error('Error submitting RSVP:', error);
-      alert('Something went wrong saving your RSVP. Please try again.');
       setIsSubmitting(false);
     }
   };

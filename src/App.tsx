@@ -19,6 +19,11 @@ import { LiveConfigEditorModal } from './components/LiveConfigEditorModal';
 import { GoogleSheetsManager } from './components/GoogleSheetsManager';
 import { FallingPetals } from './components/WatercolorFlorals';
 import { SlidersHorizontal, FileSpreadsheet } from 'lucide-react';
+import {
+  subscribeToWishes,
+  likeWishInFirestore,
+  saveWeddingConfigToFirestore,
+} from './services/firebase';
 
 const INITIAL_WISHES: GuestWish[] = [];
 
@@ -153,6 +158,22 @@ export default function App() {
     localStorage.setItem('wedding_guest_wishes_v2', JSON.stringify(wishes));
   }, [wishes]);
 
+  // Subscribe to real-time Guestbook Wishes from Firebase Firestore
+  useEffect(() => {
+    try {
+      const unsubscribe = subscribeToWishes((remoteWishes) => {
+        if (remoteWishes && remoteWishes.length > 0) {
+          setWishes(remoteWishes);
+        }
+      });
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    } catch (err) {
+      console.warn('Wishes subscription note:', err);
+    }
+  }, []);
+
   // Automatically sync local browser customization to codebase so production gets it
   useEffect(() => {
     const saved = localStorage.getItem('wedding_custom_config');
@@ -205,6 +226,16 @@ export default function App() {
       body: JSON.stringify(newConfig),
     }).catch(() => {});
 
+    // Save live configuration to Firestore
+    saveWeddingConfigToFirestore({
+      brideName: newConfig.couple.bride.name,
+      groomName: newConfig.couple.groom.name,
+      weddingDate: newConfig.weddingDate.displayDate,
+      floralTheme: newConfig.activeThemeId,
+      venueName: newConfig.events[0]?.venueName,
+      venueAddress: newConfig.events[0]?.venueAddress,
+    }).catch(() => {});
+
     if (newConfig.musicTracks && newConfig.musicTracks.length > 0) {
       if (newConfig.defaultTrackIndex !== undefined && newConfig.defaultTrackIndex >= 0 && newConfig.defaultTrackIndex < newConfig.musicTracks.length) {
         setCurrentTrackIndex(newConfig.defaultTrackIndex);
@@ -242,8 +273,14 @@ export default function App() {
   };
 
   const handleLikeWish = (wishId: string) => {
+    // Increment in Firestore if it is a Firestore document ID
+    if (!wishId.startsWith('wish-')) {
+      likeWishInFirestore(wishId).catch((err) => {
+        console.warn('Firestore like notice:', err);
+      });
+    }
     setWishes((prev) =>
-      prev.map((w) => (w.id === wishId ? { ...w, likesCount: w.likesCount + 1 } : w))
+      prev.map((w) => (w.id === wishId ? { ...w, likesCount: (w.likesCount || 0) + 1 } : w))
     );
   };
 

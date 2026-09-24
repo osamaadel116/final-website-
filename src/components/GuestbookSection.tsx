@@ -6,6 +6,7 @@ import { WatercolorDivider } from './WatercolorFlorals';
 import { BotanicalRoseHeaderOrnament } from './BotanicalRoseDecorations';
 import { getAccessToken } from '../services/googleAuth';
 import { appendWishRow } from '../services/googleSheets';
+import { addWishToFirestore } from '../services/firebase';
 
 interface GuestbookSectionProps {
   wishes: GuestWish[];
@@ -39,7 +40,18 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
       attendance: 'attending' as const,
     };
 
-    // If connected to Google Sheets, append to Wishes tab
+    // 1. If connected to Firebase, save wish directly to Firestore
+    try {
+      await addWishToFirestore({
+        senderName: wishPayload.senderName,
+        relationship: wishPayload.relationship,
+        message: wishPayload.message,
+      });
+    } catch (firestoreErr) {
+      console.warn('Firestore wish save notice:', firestoreErr);
+    }
+
+    // 2. If connected to Google Sheets, append to Wishes tab
     try {
       const accessToken = await getAccessToken();
       const sheetId = localStorage.getItem('wedding_google_sheet_id');
