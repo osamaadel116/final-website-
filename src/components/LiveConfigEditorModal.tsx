@@ -18,6 +18,8 @@ import {
   Eye,
   Trash2,
   Plus,
+  FileSpreadsheet,
+  ExternalLink,
 } from 'lucide-react';
 import { WeddingConfig } from '../types';
 
@@ -32,6 +34,7 @@ interface LiveConfigEditorModalProps {
   onToggleMobilePreview: () => void;
   showFallingPetals: boolean;
   onToggleFallingPetals: () => void;
+  onOpenGoogleSheets?: () => void;
 }
 
 export const LiveConfigEditorModal: React.FC<LiveConfigEditorModalProps> = ({
@@ -45,8 +48,9 @@ export const LiveConfigEditorModal: React.FC<LiveConfigEditorModalProps> = ({
   onToggleMobilePreview,
   showFallingPetals,
   onToggleFallingPetals,
+  onOpenGoogleSheets,
 }) => {
-  const [activeTab, setActiveTab] = useState<'general' | 'couple' | 'events' | 'music' | 'theme' | 'export'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'couple' | 'events' | 'music' | 'theme' | 'sheets' | 'export'>('general');
   const [copiedCode, setCopiedCode] = useState(false);
   const [customAudioInput, setCustomAudioInput] = useState('');
   const [customTitleInput, setCustomTitleInput] = useState('');
@@ -196,6 +200,7 @@ export const LiveConfigEditorModal: React.FC<LiveConfigEditorModalProps> = ({
               { id: 'couple', label: 'Couple Names', icon: Users },
               { id: 'events', label: 'Dates & Venue', icon: Calendar },
               { id: 'music', label: 'Music Songs', icon: Music },
+              { id: 'sheets', label: 'Google Sheets', icon: FileSpreadsheet },
               { id: 'export', label: 'Export Code', icon: Download },
             ].map((tab) => {
               const Icon = tab.icon;
@@ -693,7 +698,60 @@ export const LiveConfigEditorModal: React.FC<LiveConfigEditorModalProps> = ({
               </div>
             )}
 
-            {/* 5. EXPORT CODE */}
+            {/* 5. GOOGLE SHEETS TAB */}
+            {activeTab === 'sheets' && (
+              <div className="space-y-4 text-xs font-sans-body">
+                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-emerald-950 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <h4 className="font-semibold text-sm text-[#2E2420]">
+                      Google Sheets Live RSVP & Wishes Sync
+                    </h4>
+                  </div>
+                  <p className="text-[11px] text-emerald-900 leading-relaxed">
+                    Connect your Google account to automatically store incoming guest RSVPs, guest counts, event selections, and guestbook wishes straight into your Google Drive spreadsheet.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-white rounded-2xl border border-[#E6DCce] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-[#2E2420]">Google Sheets RSVP Manager</p>
+                      <p className="text-[11px] text-[#8C7A6B]">
+                        Sign in, create a dedicated Wedding spreadsheet, or switch between tabs.
+                      </p>
+                    </div>
+                    {onOpenGoogleSheets && (
+                      <button
+                        type="button"
+                        onClick={onOpenGoogleSheets}
+                        className="px-4 py-2 rounded-xl bg-[#2E2420] text-[#F3E5AB] font-semibold flex items-center gap-1.5 shadow-sm hover:bg-[#43352F] transition-all cursor-pointer"
+                      >
+                        <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                        <span>Open Sheets Manager</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-stone-100 flex flex-wrap gap-4 text-[11px] text-[#736357]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Direct Drive Spreadsheet Storage</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Real-time Guest Attendance Stats</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Official Google Identity Auth</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 6. EXPORT CODE */}
             {activeTab === 'export' && (
               <div className="space-y-4 text-xs font-sans-body">
                 <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-emerald-900">

@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { Send, CheckCircle2, UserCheck, Users, CalendarCheck, Sparkles, Heart } from 'lucide-react';
+import { Send, CheckCircle2, UserCheck, Users, CalendarCheck, Sparkles, Heart, FileSpreadsheet } from 'lucide-react';
 import { WeddingConfig, RsvpData, FloralTheme } from '../types';
 import { WatercolorDivider } from './WatercolorFlorals';
+import { getAccessToken } from '../services/googleAuth';
+import { appendRsvpRow } from '../services/googleSheets';
 
 interface RsvpSectionProps {
   config: WeddingConfig;
   defaultGuestName?: string;
   onRsvpSubmit: (data: RsvpData) => void;
   theme: FloralTheme;
+  onOpenGoogleSheets?: () => void;
 }
 
 export const RsvpSection: React.FC<RsvpSectionProps> = ({
@@ -17,6 +20,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   defaultGuestName = '',
   onRsvpSubmit,
   theme,
+  onOpenGoogleSheets,
 }) => {
   const [formData, setFormData] = useState<RsvpData>({
     guestName: defaultGuestName,
@@ -58,7 +62,20 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1m5lxcrDtgKs7zhJuPgkCpVIq9xkEsZcASnzBP8PEmhSsBFvZw6Q-48k4bPErzz8Wpw/exec';
 
     try {
-      // Format data safely for Google Apps Script
+      // 1. If host is logged into Google Sheets and has a sheet configured, write directly via Google Sheets v4 API
+      try {
+        const accessToken = await getAccessToken();
+        const sheetId = localStorage.getItem('wedding_google_sheet_id');
+        const sheetTab = localStorage.getItem('wedding_google_sheet_tab') || 'RSVPs';
+
+        if (accessToken && sheetId) {
+          await appendRsvpRow(accessToken, sheetId, sheetTab, formData);
+        }
+      } catch (directSheetErr) {
+        console.warn('Direct Google Sheets append notice:', directSheetErr);
+      }
+
+      // 2. Also send to Google Apps Script Web App backup
       const submitData = new URLSearchParams();
       submitData.append('guestName', formData.guestName);
       submitData.append('attendance', formData.attendance);
@@ -66,7 +83,6 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
       submitData.append('events', formData.eventIds.join(', '));
       submitData.append('message', formData.message);
 
-      // Send to Google Sheets
       await fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         body: submitData,
@@ -347,6 +363,20 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
             )}
           </AnimatePresence>
         </motion.div>
+
+        {/* Host Google Sheets RSVP Sync Button */}
+        {onOpenGoogleSheets && (
+          <div className="mt-4 flex items-center justify-center">
+            <button
+              type="button"
+              onClick={onOpenGoogleSheets}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/80 hover:bg-white border border-[#E0D5C7] text-[#6E5E53] hover:text-[#2E2420] text-xs font-medium shadow-2xs transition-all cursor-pointer backdrop-blur-xs"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Google Sheets RSVP Manager</span>
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
