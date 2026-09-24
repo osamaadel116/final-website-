@@ -38,7 +38,7 @@ function saveConfigPlugin(): Plugin {
 
 export default defineConfig(() => {
   return {
-    base: './',
+    base: '/',
     plugins: [react(), tailwindcss(), saveConfigPlugin()],
     resolve: {
       alias: {

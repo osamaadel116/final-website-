@@ -271,12 +271,18 @@ export const weddingConfig: WeddingConfig = {
     groom: {
       ...baseWeddingConfig.couple.groom,
       ...(rawCustom?.couple?.groom || {}),
-      photoUrl: rawCustom?.couple?.groom?.photoUrl || groomPhoto,
+      photoUrl:
+        rawCustom?.couple?.groom?.photoUrl && !rawCustom.couple.groom.photoUrl.startsWith('/src/')
+          ? rawCustom.couple.groom.photoUrl
+          : groomPhoto,
     },
     bride: {
       ...baseWeddingConfig.couple.bride,
       ...(rawCustom?.couple?.bride || {}),
-      photoUrl: rawCustom?.couple?.bride?.photoUrl || bridePhoto,
+      photoUrl:
+        rawCustom?.couple?.bride?.photoUrl && !rawCustom.couple.bride.photoUrl.startsWith('/src/')
+          ? rawCustom.couple.bride.photoUrl
+          : bridePhoto,
     },
   },
   weddingDate: {

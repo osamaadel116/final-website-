@@ -19,12 +19,21 @@ import {
 import firebaseConfig from '../../firebase-applet-config.json';
 import { RsvpData, GuestWish } from '../types';
 
-// Initialize Firebase App
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Initialize Firebase App with safe fallbacks
+let appInstance = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+let dbInstance: ReturnType<typeof getFirestore>;
+try {
+  dbInstance = firebaseConfig.firestoreDatabaseId
+    ? getFirestore(appInstance, firebaseConfig.firestoreDatabaseId)
+    : getFirestore(appInstance);
+} catch (e) {
+  console.warn('Firestore initialization fallback:', e);
+  dbInstance = getFirestore(appInstance);
+}
 
-// CRITICAL: Must pass firestoreDatabaseId
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const auth = getAuth(app);
+export const app = appInstance;
+export const db = dbInstance;
+export const auth = getAuth(appInstance);
 
 export enum OperationType {
   CREATE = 'create',
@@ -154,7 +163,11 @@ export function subscribeToWishes(onUpdate: (wishes: GuestWish[]) => void) {
       onUpdate(items);
     },
     (error) => {
-      handleFirestoreError(error, OperationType.LIST, collectionPath);
+      try {
+        handleFirestoreError(error, OperationType.LIST, collectionPath);
+      } catch (e) {
+        console.warn('Wishes sync subscription note:', e);
+      }
     }
   );
 }
