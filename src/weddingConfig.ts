@@ -2,6 +2,7 @@ import { WeddingConfig } from './types';
 import bridePhoto from './assets/images/regenerated_image_1788213800123.png';
 import groomPhoto from './assets/images/regenerated_image_1788214059017.jpg';
 import heroPhoto from './assets/images/regenerated_image_1788214150346.jpg';
+import customWeddingData from './weddingData.json';
 
 /**
  * =========================================================================
@@ -13,7 +14,7 @@ import heroPhoto from './assets/images/regenerated_image_1788214150346.jpg';
  * All changes will automatically reflect across the entire digital invitation!
  */
 
-export const weddingConfig: WeddingConfig = {
+const baseWeddingConfig: WeddingConfig = {
   meta: {
     siteTitle: 'The Wedding of Omar & Aya',
     welcomeGreeting: 'Together with their families, joyfully invite you to celebrate their wedding',
@@ -250,3 +251,57 @@ export const weddingConfig: WeddingConfig = {
     },
   ],
 };
+
+const rawCustom = customWeddingData as any;
+
+export const weddingConfig: WeddingConfig = {
+  ...baseWeddingConfig,
+  ...(rawCustom || {}),
+  meta: {
+    ...baseWeddingConfig.meta,
+    ...(rawCustom?.meta || {}),
+  },
+  couple: {
+    ...baseWeddingConfig.couple,
+    ...(rawCustom?.couple || {}),
+    quote: {
+      ...baseWeddingConfig.couple.quote,
+      ...(rawCustom?.couple?.quote || {}),
+    },
+    groom: {
+      ...baseWeddingConfig.couple.groom,
+      ...(rawCustom?.couple?.groom || {}),
+      photoUrl: rawCustom?.couple?.groom?.photoUrl || groomPhoto,
+    },
+    bride: {
+      ...baseWeddingConfig.couple.bride,
+      ...(rawCustom?.couple?.bride || {}),
+      photoUrl: rawCustom?.couple?.bride?.photoUrl || bridePhoto,
+    },
+  },
+  weddingDate: {
+    ...baseWeddingConfig.weddingDate,
+    ...(rawCustom?.weddingDate || {}),
+  },
+  events:
+    Array.isArray(rawCustom?.events) && rawCustom.events.length > 0
+      ? rawCustom.events
+      : baseWeddingConfig.events,
+  timeline:
+    Array.isArray(rawCustom?.timeline) && rawCustom.timeline.length > 0
+      ? rawCustom.timeline
+      : baseWeddingConfig.timeline,
+  dressCode: {
+    ...baseWeddingConfig.dressCode,
+    ...(rawCustom?.dressCode || {}),
+  },
+  rsvpConfig: {
+    ...baseWeddingConfig.rsvpConfig,
+    ...(rawCustom?.rsvpConfig || {}),
+  },
+  musicTracks:
+    Array.isArray(rawCustom?.musicTracks) && rawCustom.musicTracks.length > 0
+      ? rawCustom.musicTracks
+      : baseWeddingConfig.musicTracks,
+};
+

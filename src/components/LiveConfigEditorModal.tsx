@@ -20,6 +20,7 @@ import {
   Plus,
   FileSpreadsheet,
   ExternalLink,
+  Save,
 } from 'lucide-react';
 import { WeddingConfig } from '../types';
 
@@ -52,12 +53,33 @@ export const LiveConfigEditorModal: React.FC<LiveConfigEditorModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'general' | 'couple' | 'events' | 'music' | 'theme' | 'sheets' | 'export'>('general');
   const [copiedCode, setCopiedCode] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishedSuccess, setPublishedSuccess] = useState(false);
   const [customAudioInput, setCustomAudioInput] = useState('');
   const [customTitleInput, setCustomTitleInput] = useState('');
   const [customArtistInput, setCustomArtistInput] = useState('');
 
   const handleUpdate = (updater: (prev: WeddingConfig) => WeddingConfig) => {
     onUpdateConfig(updater(config));
+  };
+
+  const handlePublishToProduction = async () => {
+    setIsPublishing(true);
+    try {
+      const res = await fetch('/api/save-wedding-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (res.ok) {
+        setPublishedSuccess(true);
+        setTimeout(() => setPublishedSuccess(false), 3500);
+      }
+    } catch (err) {
+      console.error('Failed to save to production codebase:', err);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleCopyTS = () => {
@@ -751,14 +773,37 @@ export const LiveConfigEditorModal: React.FC<LiveConfigEditorModalProps> = ({
               </div>
             )}
 
-            {/* 6. EXPORT CODE */}
+            {/* 6. EXPORT & PUBLISH CODE */}
             {activeTab === 'export' && (
               <div className="space-y-4 text-xs font-sans-body">
-                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-emerald-900">
-                  <p className="font-semibold text-sm">Deployment Ready!</p>
-                  <p className="text-[11px] mt-1">
-                    You can copy this configuration directly into <code className="bg-white/80 px-1 py-0.5 rounded">src/weddingConfig.ts</code> or download it as JSON to save your custom values permanently.
+                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-300 text-emerald-950 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold text-sm">Save & Publish to Production Codebase</p>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-800 text-[10px] font-bold">
+                      Permanent Sync
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-900 leading-relaxed">
+                    Click the button below to write your current customizations directly into the codebase. All guests and visitors on the production site will see your updated wedding details immediately.
                   </p>
+                  <button
+                    type="button"
+                    onClick={handlePublishToProduction}
+                    disabled={isPublishing}
+                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                  >
+                    {publishedSuccess ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-300" />
+                        <span>Published to Production Codebase!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        <span>{isPublishing ? 'Publishing...' : 'Publish to Production Now'}</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 <div className="flex gap-2">
@@ -799,12 +844,24 @@ export const LiveConfigEditorModal: React.FC<LiveConfigEditorModalProps> = ({
               <span>Reset Defaults</span>
             </button>
 
-            <button
-              onClick={onClose}
-              className="px-6 py-2 rounded-full bg-[#3D2B24] text-white text-xs font-medium uppercase tracking-wider hover:bg-black transition-colors"
-            >
-              Apply & Close
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handlePublishToProduction}
+                disabled={isPublishing}
+                className="px-4 py-2 rounded-full border border-emerald-600 text-emerald-800 hover:bg-emerald-50 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Save className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{publishedSuccess ? 'Saved!' : 'Save to Production'}</span>
+              </button>
+
+              <button
+                onClick={onClose}
+                className="px-6 py-2 rounded-full bg-[#3D2B24] text-white text-xs font-medium uppercase tracking-wider hover:bg-black transition-colors cursor-pointer"
+              >
+                Apply & Close
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>

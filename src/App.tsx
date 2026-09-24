@@ -153,6 +153,20 @@ export default function App() {
     localStorage.setItem('wedding_guest_wishes_v2', JSON.stringify(wishes));
   }, [wishes]);
 
+  // Automatically sync local browser customization to codebase so production gets it
+  useEffect(() => {
+    const saved = localStorage.getItem('wedding_custom_config');
+    if (saved) {
+      try {
+        fetch('/api/save-wedding-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: saved,
+        }).catch(() => {});
+      } catch {}
+    }
+  }, []);
+
   // Track active section via IntersectionObserver for Canva story progress bar
   useEffect(() => {
     if (!isInvitationOpen) return;
@@ -185,6 +199,12 @@ export default function App() {
   const handleUpdateConfig = (newConfig: WeddingConfig) => {
     setConfig(newConfig);
     localStorage.setItem('wedding_custom_config', JSON.stringify(newConfig));
+    fetch('/api/save-wedding-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newConfig),
+    }).catch(() => {});
+
     if (newConfig.musicTracks && newConfig.musicTracks.length > 0) {
       if (newConfig.defaultTrackIndex !== undefined && newConfig.defaultTrackIndex >= 0 && newConfig.defaultTrackIndex < newConfig.musicTracks.length) {
         setCurrentTrackIndex(newConfig.defaultTrackIndex);
@@ -197,6 +217,11 @@ export default function App() {
   const handleResetToDefaults = () => {
     setConfig(initialWeddingConfig);
     localStorage.removeItem('wedding_custom_config');
+    fetch('/api/save-wedding-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    }).catch(() => {});
     setCurrentTrackIndex(initialWeddingConfig.defaultTrackIndex || 0);
   };
 
