@@ -16,14 +16,8 @@ import { RsvpSection } from './components/RsvpSection';
 import { GuestbookSection } from './components/GuestbookSection';
 import { FooterSection } from './components/FooterSection';
 import { LiveConfigEditorModal } from './components/LiveConfigEditorModal';
-import { GoogleSheetsManager } from './components/GoogleSheetsManager';
 import { FallingPetals } from './components/WatercolorFlorals';
-import { SlidersHorizontal, FileSpreadsheet } from 'lucide-react';
-import {
-  subscribeToWishes,
-  likeWishInFirestore,
-  saveWeddingConfigToFirestore,
-} from './services/firebase';
+import { SlidersHorizontal } from 'lucide-react';
 
 const INITIAL_WISHES: GuestWish[] = [];
 
@@ -131,7 +125,6 @@ export default function App() {
 
   // Modal customizer state (hidden by default)
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
-  const [isGoogleSheetsOpen, setIsGoogleSheetsOpen] = useState(false);
   const [isMobilePreview, setIsMobilePreview] = useState(false);
   const [showFallingPetals, setShowFallingPetals] = useState(true);
   const [showEditButton, setShowEditButton] = useState(false);
@@ -147,9 +140,6 @@ export default function App() {
       if (params.get('edit') === 'true' || params.get('admin') === 'true') {
         setShowEditButton(true);
       }
-      if (params.get('sheets') === 'true') {
-        setIsGoogleSheetsOpen(true);
-      }
     }
   }, []);
 
@@ -157,36 +147,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('wedding_guest_wishes_v2', JSON.stringify(wishes));
   }, [wishes]);
-
-  // Subscribe to real-time Guestbook Wishes from Firebase Firestore
-  useEffect(() => {
-    try {
-      const unsubscribe = subscribeToWishes((remoteWishes) => {
-        if (remoteWishes && remoteWishes.length > 0) {
-          setWishes(remoteWishes);
-        }
-      });
-      return () => {
-        if (unsubscribe) unsubscribe();
-      };
-    } catch (err) {
-      console.warn('Wishes subscription note:', err);
-    }
-  }, []);
-
-  // Automatically sync local browser customization to codebase so production gets it
-  useEffect(() => {
-    const saved = localStorage.getItem('wedding_custom_config');
-    if (saved) {
-      try {
-        fetch('/api/save-wedding-config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: saved,
-        }).catch(() => {});
-      } catch {}
-    }
-  }, []);
 
   // Track active section via IntersectionObserver for Canva story progress bar
   useEffect(() => {
@@ -220,22 +180,6 @@ export default function App() {
   const handleUpdateConfig = (newConfig: WeddingConfig) => {
     setConfig(newConfig);
     localStorage.setItem('wedding_custom_config', JSON.stringify(newConfig));
-    fetch('/api/save-wedding-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newConfig),
-    }).catch(() => {});
-
-    // Save live configuration to Firestore
-    saveWeddingConfigToFirestore({
-      brideName: newConfig.couple.bride.name,
-      groomName: newConfig.couple.groom.name,
-      weddingDate: newConfig.weddingDate.displayDate,
-      floralTheme: newConfig.activeThemeId,
-      venueName: newConfig.events[0]?.venueName,
-      venueAddress: newConfig.events[0]?.venueAddress,
-    }).catch(() => {});
-
     if (newConfig.musicTracks && newConfig.musicTracks.length > 0) {
       if (newConfig.defaultTrackIndex !== undefined && newConfig.defaultTrackIndex >= 0 && newConfig.defaultTrackIndex < newConfig.musicTracks.length) {
         setCurrentTrackIndex(newConfig.defaultTrackIndex);
@@ -248,11 +192,6 @@ export default function App() {
   const handleResetToDefaults = () => {
     setConfig(initialWeddingConfig);
     localStorage.removeItem('wedding_custom_config');
-    fetch('/api/save-wedding-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: '{}',
-    }).catch(() => {});
     setCurrentTrackIndex(initialWeddingConfig.defaultTrackIndex || 0);
   };
 
@@ -273,14 +212,8 @@ export default function App() {
   };
 
   const handleLikeWish = (wishId: string) => {
-    // Increment in Firestore if it is a Firestore document ID
-    if (!wishId.startsWith('wish-')) {
-      likeWishInFirestore(wishId).catch((err) => {
-        console.warn('Firestore like notice:', err);
-      });
-    }
     setWishes((prev) =>
-      prev.map((w) => (w.id === wishId ? { ...w, likesCount: (w.likesCount || 0) + 1 } : w))
+      prev.map((w) => (w.id === wishId ? { ...w, likesCount: w.likesCount + 1 } : w))
     );
   };
 
@@ -335,7 +268,7 @@ export default function App() {
         accentColor={activeTheme.primaryColor}
       />
 
-      {/* Top Quick Bar for Google Sheets & Customizer (hidden by default) */}
+      {/* Top Quick Bar for Auto Video Mode & Customizer (hidden by default) */}
       {showEditButton && (
         <motion.div
           initial={{ opacity: 0, y: -12 }}
@@ -343,16 +276,6 @@ export default function App() {
           transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
           className="fixed top-5 right-4 z-40 flex items-center gap-2"
         >
-          {/* Google Sheets RSVP Sync Button */}
-          <button
-            onClick={() => setIsGoogleSheetsOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#2C2420]/90 backdrop-blur-md border border-emerald-500/70 text-emerald-300 hover:text-white text-xs font-semibold shadow-md hover:bg-[#3D2B24] transition-all cursor-pointer"
-            title="Google Sheets RSVP & Attendance"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">Google Sheets</span>
-          </button>
-
           {/* Live Edit Details Button */}
           <button
             onClick={() => setIsCustomizerOpen(true)}
@@ -396,7 +319,6 @@ export default function App() {
           defaultGuestName={guestName !== 'Distinguished Guest' ? guestName : ''}
           onRsvpSubmit={handleRsvpSubmit}
           theme={activeTheme}
-          onOpenGoogleSheets={() => setIsGoogleSheetsOpen(true)}
         />
 
         {/* 5. Wedding Guestbook & Warmest Wishes Scene */}
@@ -426,16 +348,6 @@ export default function App() {
         onToggleMobilePreview={() => setIsMobilePreview(!isMobilePreview)}
         showFallingPetals={showFallingPetals}
         onToggleFallingPetals={() => setShowFallingPetals(!showFallingPetals)}
-        onOpenGoogleSheets={() => {
-          setIsCustomizerOpen(false);
-          setIsGoogleSheetsOpen(true);
-        }}
-      />
-
-      {/* Google Sheets RSVP & Attendance Manager Modal */}
-      <GoogleSheetsManager
-        isOpen={isGoogleSheetsOpen}
-        onClose={() => setIsGoogleSheetsOpen(false)}
       />
     </div>
   );
