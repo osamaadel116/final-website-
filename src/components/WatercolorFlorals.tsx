@@ -371,7 +371,7 @@ export const WatercolorDivider: React.FC<FloralProps> = ({ className = '' }) => 
 /**
  * Romantic Falling Flower Petals Canvas Simulation
  */
-export const FallingPetals: React.FC<{ tone?: 'blush' | 'sage' | 'dustyBlue' | 'emerald' | 'burgundy' | 'champagne' }> = ({
+export const FallingPetals: React.FC<{ tone?: FloralProps['tone'] }> = ({
   tone = 'blush',
 }) => {
   const c = colorMaps[tone] || colorMaps.blush;

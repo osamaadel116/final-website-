@@ -4,6 +4,9 @@ import { MessageSquareHeart, Heart, Send, Sparkles, User, Tag, ChevronDown, Chev
 import { GuestWish, FloralTheme } from '../types';
 import { WatercolorDivider } from './WatercolorFlorals';
 import { BotanicalRoseHeaderOrnament } from './BotanicalRoseDecorations';
+import { getAccessToken } from '../services/googleAuth';
+import { appendWishRow } from '../services/googleSheets';
+import { addWishToFirestore } from '../services/firebase';
 
 interface GuestbookSectionProps {
   wishes: GuestWish[];
@@ -24,21 +27,46 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
   const [isPosting, setIsPosting] = useState(false);
   const [showAllWishes, setShowAllWishes] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!senderName.trim() || !message.trim()) return;
 
     setIsPosting(true);
-    setTimeout(() => {
-      onAddWish({
-        senderName: senderName.trim(),
-        relationship,
-        message: message.trim(),
-        attendance: 'attending',
+
+    const wishPayload = {
+      senderName: senderName.trim(),
+      relationship,
+      message: message.trim(),
+      attendance: 'attending' as const,
+    };
+
+    // 1. If connected to Firebase, save wish directly to Firestore
+    try {
+      await addWishToFirestore({
+        senderName: wishPayload.senderName,
+        relationship: wishPayload.relationship,
+        message: wishPayload.message,
       });
+    } catch (firestoreErr) {
+      console.warn('Firestore wish save notice:', firestoreErr);
+    }
+
+    // 2. If connected to Google Sheets, append to Wishes tab
+    try {
+      const accessToken = await getAccessToken();
+      const sheetId = localStorage.getItem('wedding_google_sheet_id');
+      if (accessToken && sheetId) {
+        await appendWishRow(accessToken, sheetId, 'Wishes', wishPayload);
+      }
+    } catch (sheetErr) {
+      console.warn('Google Sheets wish sync notice:', sheetErr);
+    }
+
+    setTimeout(() => {
+      onAddWish(wishPayload);
       setMessage('');
       setIsPosting(false);
-    }, 400);
+    }, 300);
   };
 
   const relationshipOptions = [
