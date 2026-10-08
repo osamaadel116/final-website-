@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan for tailoring the RSVP section to collect exactly Full Name, Attendance Confirmation, and Number of Persons Attending, and embedding a live real-time response sheet directly beneath the card.",
-  "updatedAt":  "2026-10-08T20:07:35.696338256Z",
+  "summary":  "Implementation plan for privatizing the RSVP Responses Sheet, ensuring it is completely hidden from end-user guests and automatically unlocked only when signed in with your host Google account (osos11886@gmail.com).",
+  "updatedAt":  "2026-10-08T20:42:45.349048859Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

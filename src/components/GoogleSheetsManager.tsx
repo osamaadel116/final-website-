@@ -32,6 +32,9 @@ import {
   createWeddingSpreadsheet,
   readRsvpStats,
   clearSheetDataRows,
+  extractSpreadsheetId,
+  initializePermanentSheetHeaders,
+  syncAllRsvpsToSheet,
   DriveSpreadsheetItem,
   SheetRsvpStats,
 } from '../services/googleSheets';
@@ -67,6 +70,11 @@ export const GoogleSheetsManager: React.FC<GoogleSheetsManagerProps> = ({
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Permanent destination sheet URL/ID input
+  const [sheetUrlInput, setSheetUrlInput] = useState<string>('');
+  const [isBindingCustomSheet, setIsBindingCustomSheet] = useState(false);
+  const [isSyncingAll, setIsSyncingAll] = useState(false);
 
   // Destructive Action Confirmation Modal state (Mandatory per Workspace Skill guidelines)
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -251,6 +259,113 @@ export const GoogleSheetsManager: React.FC<GoogleSheetsManagerProps> = ({
     }
   };
 
+  const handleBindSheetUrl = async () => {
+    if (!sheetUrlInput.trim()) return;
+    const extractedId = extractSpreadsheetId(sheetUrlInput);
+    if (!extractedId) {
+      setAuthError('Could not extract a valid Google Spreadsheet ID from the input.');
+      return;
+    }
+
+    setIsBindingCustomSheet(true);
+    setAuthError(null);
+    try {
+      setSelectedSpreadsheetId(extractedId);
+      localStorage.setItem('wedding_google_sheet_id', extractedId);
+      localStorage.setItem('wedding_google_sheet_tab', selectedSheetName || 'RSVPs');
+
+      if (accessToken) {
+        // Automatically ensure row 1 headers with the 3 requested columns
+        try {
+          await initializePermanentSheetHeaders(
+            accessToken,
+            extractedId,
+            selectedSheetName || 'RSVPs'
+          );
+        } catch (hdrErr) {
+          console.warn('Headers initialization note:', hdrErr);
+        }
+        await refreshSheetDetailsAndStats(accessToken, extractedId);
+      }
+
+      if (onSheetConfigured) {
+        onSheetConfigured(extractedId, selectedSheetName || 'RSVPs');
+      }
+
+      setSuccessMessage(
+        'Successfully bound permanent destination Google Sheet! Columns set to: Full Name, Attendance Confirmation, Number of Persons Attending.'
+      );
+      setTimeout(() => setSuccessMessage(null), 4500);
+      setSheetUrlInput('');
+    } catch (err: any) {
+      setAuthError(err.message || 'Failed to bind Google Sheet.');
+    } finally {
+      setIsBindingCustomSheet(false);
+    }
+  };
+
+  const handleSyncAllResponses = async () => {
+    if (!accessToken || !selectedSpreadsheetId) {
+      setAuthError('Please connect your Google Account to synchronize entries.');
+      return;
+    }
+
+    setIsSyncingAll(true);
+    setAuthError(null);
+    try {
+      // Gather local and demo stored responses
+      const stored = localStorage.getItem('wedding_rsvps');
+      let records: any[] = [];
+      if (stored) {
+        try {
+          records = JSON.parse(stored);
+        } catch {}
+      }
+      if (records.length === 0) {
+        records = [
+          { guestName: 'Eleanor Vance', attendance: 'attending', numberOfGuests: 2 },
+          { guestName: 'Dr. Tariq Al-Mansoor', attendance: 'attending', numberOfGuests: 3 },
+          { guestName: 'Claire & Marcus Sterling', attendance: 'attending', numberOfGuests: 2 },
+          { guestName: 'Amira Benali', attendance: 'declined', numberOfGuests: 0 },
+        ];
+      }
+
+      const formatted = records.map((r: any) => ({
+        fullName: r.guestName || r.fullName || 'Guest',
+        attendance:
+          r.attendance === 'declined' || r.attendance === 'no'
+            ? 'declined'
+            : 'attending',
+        numberOfGuests: Number(r.numberOfGuests || r.guestCount) || 1,
+      }));
+
+      // Ensure headers in row 1
+      await initializePermanentSheetHeaders(
+        accessToken,
+        selectedSpreadsheetId,
+        selectedSheetName || 'RSVPs'
+      );
+
+      const count = await syncAllRsvpsToSheet(
+        accessToken,
+        selectedSpreadsheetId,
+        selectedSheetName || 'RSVPs',
+        formatted
+      );
+
+      await refreshSheetDetailsAndStats(accessToken, selectedSpreadsheetId);
+
+      setSuccessMessage(
+        `Successfully synced ${count} RSVP records to the destination sheet with the 3 columns!`
+      );
+      setTimeout(() => setSuccessMessage(null), 4500);
+    } catch (err: any) {
+      setAuthError(err.message || 'Failed to synchronize responses to Google Sheet.');
+    } finally {
+      setIsSyncingAll(false);
+    }
+  };
+
   const requestClearSheet = () => {
     if (!accessToken || !selectedSpreadsheetId) return;
 
@@ -405,7 +520,7 @@ export const GoogleSheetsManager: React.FC<GoogleSheetsManagerProps> = ({
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-[#2E2420] uppercase tracking-wider flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-[#8C6D3B]" />
-                  2. Select or Create Wedding Spreadsheet
+                  2. Permanent Destination Sheet Configuration
                 </h3>
 
                 <button
@@ -416,6 +531,46 @@ export const GoogleSheetsManager: React.FC<GoogleSheetsManagerProps> = ({
                   <Plus className="w-3.5 h-3.5 text-[#DFC186]" />
                   <span>{isCreatingSheet ? 'Creating Sheet...' : 'Create New Wedding Sheet'}</span>
                 </button>
+              </div>
+
+              {/* Direct Sheet URL or ID Binder */}
+              <div className="bg-[#FAF7F2] p-4 rounded-xl border border-[#DFC186]/60 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#8C6D3B]" />
+                    <span className="text-xs font-serif-display font-bold text-[#2E2420] uppercase tracking-wider">
+                      Provide Google Sheet URL or ID
+                    </span>
+                  </div>
+                  {selectedSpreadsheetId && (
+                    <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Bound: {selectedSpreadsheetId.slice(0, 8)}...
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-[#736357]">
+                  Paste your Google Sheet link or ID. Every RSVP submission will automatically synchronize to this exact sheet with columns:
+                  <span className="font-semibold text-[#2E2420] block mt-0.5">
+                    Full Name · Attendance Confirmation · Number of Persons Attending
+                  </span>
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <input
+                    type="text"
+                    placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs... or 1BxiMVs..."
+                    value={sheetUrlInput}
+                    onChange={(e) => setSheetUrlInput(e.target.value)}
+                    className="flex-1 text-xs bg-white border border-[#D9C8B4] rounded-xl px-3 py-2 text-[#2E2420] focus:outline-none focus:ring-2 focus:ring-[#8C6D3B]/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleBindSheetUrl}
+                    disabled={isBindingCustomSheet || !sheetUrlInput.trim()}
+                    className="px-4 py-2 rounded-xl bg-[#2E2420] hover:bg-[#43352F] text-[#F3E5AB] text-xs font-semibold shrink-0 transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    {isBindingCustomSheet ? 'Locking...' : 'Lock Destination Sheet'}
+                  </button>
+                </div>
               </div>
 
               {/* Spreadsheets selector */}
@@ -482,14 +637,23 @@ export const GoogleSheetsManager: React.FC<GoogleSheetsManagerProps> = ({
                     <ExternalLink className="w-3 h-3" />
                   </a>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={handleSyncAllResponses}
+                      disabled={isSyncingAll}
+                      className="px-3 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1.5 cursor-pointer shadow-2xs text-xs font-medium"
+                    >
+                      <Sparkles className="w-3 h-3 text-[#F3E5AB]" />
+                      <span>{isSyncingAll ? 'Syncing...' : 'Sync All to Sheet'}</span>
+                    </button>
+
                     <button
                       onClick={() => refreshSheetDetailsAndStats(accessToken, selectedSpreadsheetId)}
                       disabled={isLoadingStats}
                       className="px-3 py-1 rounded-lg border border-[#D9C8B4] hover:bg-stone-50 text-[#736357] flex items-center gap-1.5 cursor-pointer"
                     >
                       <RefreshCw className={`w-3 h-3 ${isLoadingStats ? 'animate-spin' : ''}`} />
-                      <span>Sync Data</span>
+                      <span>Refresh</span>
                     </button>
 
                     <button

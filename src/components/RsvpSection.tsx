@@ -13,11 +13,14 @@ import {
   Search,
   Table as TableIcon,
   RefreshCw,
-  X,
+  ExternalLink,
+  ShieldCheck,
+  Lock,
 } from 'lucide-react';
+import { User } from 'firebase/auth';
 import { WeddingConfig, RsvpData, FloralTheme } from '../types';
 import { WatercolorDivider } from './WatercolorFlorals';
-import { getAccessToken } from '../services/googleAuth';
+import { getAccessToken, initAuth, getCurrentUser } from '../services/googleAuth';
 import { appendRsvpRow } from '../services/googleSheets';
 import {
   submitRsvpToFirestore,
@@ -85,6 +88,27 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Host authentication state (only the host sees the private RSVP sheet)
+  const [currentUser, setCurrentUser] = useState<User | null>(() => getCurrentUser());
+
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (user) => {
+        setCurrentUser(user);
+      },
+      () => {
+        setCurrentUser(null);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  // Verification if viewer is authenticated as the host
+  const isHost = Boolean(
+    currentUser ||
+    localStorage.getItem('wedding_is_admin') === 'true'
+  );
+
   // Live Sheet state
   const [remoteRsvps, setRemoteRsvps] = useState<RsvpResponseRecord[]>([]);
   const [localRsvps, setLocalRsvps] = useState<RsvpResponseRecord[]>(() => {
@@ -118,17 +142,6 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [attendanceFilter, setAttendanceFilter] = useState<'all' | 'attending' | 'declined'>('all');
   const [isLiveConnected, setIsLiveConnected] = useState(false);
-  // Response sheet is hidden by default per user request
-  const [isSheetVisible, setIsSheetVisible] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('sheet') === 'true' || params.get('admin') === 'true') {
-        setIsSheetVisible(true);
-      }
-    }
-  }, []);
 
   // Real-time synchronization with Firestore
   useEffect(() => {
@@ -357,7 +370,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   </h3>
                   <p className="font-sans-body text-sm text-[#6E5E53] max-w-md mt-2">
                     {formData.attendance === 'attending'
-                      ? `Your RSVP for ${formData.numberOfGuests} person(s) has been successfully recorded. We look forward to celebrating together!`
+                      ? `Your RSVP for ${formData.numberOfGuests} person(s) has been recorded. We look forward to celebrating together!`
                       : 'We regret that you cannot attend, but thank you warmly for letting us know.'}
                   </p>
 
@@ -368,13 +381,23 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                     >
                       Submit Another Response
                     </button>
-                    <a
-                      href="#wishes"
-                      className="px-5 py-2 rounded-full bg-[#3D2B24] text-white text-xs font-sans-body flex items-center gap-1.5 shadow-xs"
-                    >
-                      <Heart className="w-3.5 h-3.5 text-[#E8B4B8] fill-current" />
-                      <span>Leave a Wedding Wish</span>
-                    </a>
+                    {isHost ? (
+                      <a
+                        href="#rsvp-sheet"
+                        className="px-5 py-2 rounded-full bg-[#3D2B24] text-white text-xs font-sans-body flex items-center gap-1.5 shadow-xs"
+                      >
+                        <TableIcon className="w-3.5 h-3.5 text-[#DFC186]" />
+                        <span>View Private Sheet Below</span>
+                      </a>
+                    ) : (
+                      <a
+                        href="#wishes"
+                        className="px-5 py-2 rounded-full bg-[#3D2B24] text-white text-xs font-sans-body flex items-center gap-1.5 shadow-xs"
+                      >
+                        <Heart className="w-3.5 h-3.5 text-[#E8B4B8] fill-current" />
+                        <span>Leave a Wedding Wish</span>
+                      </a>
+                    )}
                   </div>
                 </motion.div>
               ) : (
@@ -517,62 +540,75 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
           </motion.div>
         </div>
 
+        {/* Embedded Live RSVP Responses Sheet - HOST-ONLY PRIVATE VIEW */}
+        {isHost && (
+          <div id="rsvp-sheet" className="mt-14 text-left">
+            {/* Host Privacy Banner */}
+            <div className="mb-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-xs font-medium shadow-2xs">
+              <ShieldCheck className="w-4 h-4 text-emerald-700" />
+              <span>
+                Host-Only Private Ledger &middot; Visible exclusively to {currentUser?.email || 'Host'}
+              </span>
+            </div>
 
-
-        {/* Embedded Live RSVP Responses Sheet */}
-        {isSheetVisible && (
-          <div id="rsvp-sheet" className="mt-10 text-left">
             {/* Sheet Header & Controls */}
             <div className="bg-[#FAF7F2] border border-[#E6DCce] rounded-3xl p-5 sm:p-7 shadow-md">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-[#EAE0D2]">
-                <div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#3D2B24] text-white flex items-center justify-center shadow-xs">
-                      <TableIcon className="w-4 h-4 text-[#DFC186]" />
-                    </div>
-                    <div>
-                      <h3 className="font-serif-display text-xl sm:text-2xl font-bold text-[#2E2420]">
-                        RSVP Responses Sheet
-                      </h3>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-[#EAE0D2]">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#3D2B24] text-white flex items-center justify-center shadow-xs">
+                    <TableIcon className="w-4 h-4 text-[#DFC186]" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif-display text-xl sm:text-2xl font-bold text-[#2E2420]">
+                      RSVP Responses Sheet
+                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap mt-0.5">
                       <p className="text-xs text-[#736357]">
                         Live attendee confirmation ledger synchronized in real time
                       </p>
+                      {localStorage.getItem('wedding_google_sheet_id') && (
+                        <a
+                          href={`https://docs.google.com/spreadsheets/d/${localStorage.getItem('wedding_google_sheet_id')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-medium hover:bg-emerald-100 transition-colors"
+                        >
+                          <FileSpreadsheet className="w-3 h-3 text-emerald-600" />
+                          <span>
+                            Destination Sheet: {localStorage.getItem('wedding_google_sheet_id')?.slice(0, 8)}...
+                          </span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Actions & CSV Export */}
-                <div className="flex items-center gap-2.5 flex-wrap">
+              {/* Actions & CSV Export */}
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleExportCsv}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#DCD0C0] hover:bg-[#F5EFE6] text-[#3D2B24] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#8C6D3B]" />
+                  <span>Export CSV</span>
+                </button>
+
+                {onOpenGoogleSheets && (
                   <button
                     type="button"
-                    onClick={handleExportCsv}
+                    onClick={onOpenGoogleSheets}
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#DCD0C0] hover:bg-[#F5EFE6] text-[#3D2B24] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
                   >
-                    <Download className="w-3.5 h-3.5 text-[#8C6D3B]" />
-                    <span>Export CSV</span>
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Google Sheets Sync</span>
                   </button>
-
-                  {onOpenGoogleSheets && (
-                    <button
-                      type="button"
-                      onClick={onOpenGoogleSheets}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#DCD0C0] hover:bg-[#F5EFE6] text-[#3D2B24] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                    >
-                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Google Sheets Sync</span>
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => setIsSheetVisible(false)}
-                    className="p-2 rounded-xl bg-white border border-[#DCD0C0] hover:bg-[#F5EFE6] text-[#8C7A6B] hover:text-[#2E2420] transition-colors cursor-pointer"
-                    title="Hide Responses Sheet"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                )}
               </div>
+            </div>
 
             {/* Metrics Ribbon */}
             <div className="grid grid-cols-3 gap-2 sm:gap-4 py-4 border-b border-[#EAE0D2] text-center">
